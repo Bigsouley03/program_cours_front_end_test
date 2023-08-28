@@ -3,7 +3,7 @@ import { Link, useHistory } from 'react-router-dom';
 import { Container, Typography, TextField, Button, Grid, Paper } from '@mui/material';
 import axios from 'axios';
 
-const apiUrl = 'http://localhost:8000/api';
+const apiUrl = 'http://127.0.0.1:8000/api';
 
 function Register() {
   const [name, setName] = useState('');
@@ -23,17 +23,20 @@ function Register() {
 
     axios.post(`${apiUrl}/register`, registerData)
       .then(response => {
-        // Traitement réussi
-        console.log(response.data);
-        console.log('Registered successfully');
+        // Successful registration
+        const token = response.data.access_token;
+        console.log('Registration successful');
+        
+        // Save the token in localStorage or a global state management solution if needed
+        localStorage.setItem('token', token);
 
-        // Redirigez l'utilisateur vers la page de connexion ici
-        history.push('/login');
+        // Redirect the user to the appropriate page here
+        history.push('/'); // Redirect to the Dashboard or another page
       })
       .catch(error => {
-        // Erreur d'inscription
+        // Registration error
         console.error('Registration error:', error);
-        setErrorMessage('Registration failed. Please try again.');
+        setErrorMessage('Error registering the account. Please try again.');
       });
   };
 
@@ -52,6 +55,7 @@ function Register() {
             id="name"
             label="Name"
             name="name"
+            autoComplete="name"
             autoFocus
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -90,10 +94,10 @@ function Register() {
           >
             Register
           </Button>
-          <Grid container justifyContent="flex-end">
+          <Grid container>
             <Grid item>
               <Link to="/login" variant="body2">
-                Already have an account? Sign In
+                Already have an account? Sign in
               </Link>
             </Grid>
           </Grid>

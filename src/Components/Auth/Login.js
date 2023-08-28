@@ -1,106 +1,136 @@
-import React, { useState } from 'react';
-import { Link, useHistory } from 'react-router-dom';
-import { Container, Typography, TextField, Button, Grid, Paper } from '@mui/material';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-const apiUrl = 'http://localhost:8000/api';
+import {
+  Typography,
+  TextField,
+  Button,
+  Container,
+  Box,
+  Grid,
+  Paper,
+} from '@mui/material';
 
-function Login() {
+const Login = ({ accessToken, setAccessToken }) => {
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
-  const history = useHistory();
-  const handleLogin = (e) => {
-    e.preventDefault();
+  const [errors, setErrors] = useState('');
+  const [csrfToken, setCsrfToken] = useState('');
 
-    const loginData = {
-      email: email,
-      password: password,
+  useEffect(() => {
+    // Fetch CSRF token from your Laravel backend
+    const fetchCsrfToken = async () => {
+      try {
+        const response = await axios.get('http://127.0.0.1:8000/sanctum/csrf-cookie');
+        setCsrfToken(response.data.csrfToken);
+      } catch (error) {
+        console.error('Failed to fetch CSRF token:', error);
+      }
     };
 
-    axios.post(`${apiUrl}/login`, loginData, {
-      headers: {
-        'X-CSRF-TOKEN': window.csrfToken,
-      }
-      
-    })
-      .then(response => {
-        // Successful login
-        console.log(response.data);
-        console.log('Login successful');
+    fetchCsrfToken();
+  }, []);
 
-        // Redirect the user to the appropriate page here
-        history.push('/'); // Redirect to the Dashboard or another page
-      })
-      .catch(error => {
-        // Login error
-        console.error('Login error:', error);
-        setErrorMessage('Invalid email or password. Please try again.');
-      });
+  const handleLogin = async () => {
+    try {
+      const loginResponse = await axios.post(
+        'http://127.0.0.1:8000/api/login',
+        {
+          email: email,
+          password: password,
+        },
+        {
+          headers: {
+            'X-CSRF-TOKEN': csrfToken,
+          },
+        }
+      );
+      const token = loginResponse.data.access_token;
+      // Set access token in state
+      setAccessToken(token);
+      
+      // Clear form fields and errors
+      setEmail('');
+      setPassword('');
+      setErrors('');//
+      // Redirect to dashboard after successful login
+      // history.push('/');
+    } catch (error) {
+      if (error.response) {
+        setErrors(error.response.data.message);
+      } else {
+        console.error('An error occurred:', error.message);
+      }
+    }
   };
 
+
+
   return (
-    <Container component="main" maxWidth="xs">
-      <Paper elevation={2} style={{ padding: '60px', marginTop: '60px' }}>
-        <Typography variant="h5" component="h1" align="center">
-          Login
-        </Typography>
-        <form onSubmit={handleLogin} method="post">
-          <TextField
-            variant="outlined"
-            margin="normal"
-            required
-            fullWidth
-            id="email"
-            label="Email Address"
-            name="email"
-            autoComplete="email"
-            autoFocus
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <TextField
-            variant="outlined"
-            margin="normal"
-            required
-            fullWidth
-            name="password"
-            label="Password"
-            type="password"
-            id="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            color="primary"
-            style={{ marginTop: '10px' }}
-          >
-            Sign In
-          </Button>
-          <Grid container>
-            <Grid item xs>
-              <Link to="/forgot-password" variant="body2">
-                Forgot password?
-              </Link>
+    <Container maxWidth="lg">
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh',
+          backgroundColor: '#f7faff', // Couleur bleu pâle
+        }}
+      >
+        <Paper elevation={3} sx={{ p: 4, backgroundColor: 'white' }}>
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6}>
+              <img
+                src="https://cat.sn/storage/0XFJUqtbNQwEZwYXiSSMt6KJLWRTPUHMqA81frjc.png"
+                alt="Logo"
+                style={{ width: '100%', height: 'auto' }}
+              />
             </Grid>
-            <Grid item>
-              <Link to="/register" variant="body2">
-                {"Don't have an account? Sign Up"}
-              </Link>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="h4" gutterBottom>
+                Connexion
+              </Typography>
+              {accessToken ? (
+                <div>
+                  <Typography variant="body1">You are logged in!</Typography>
+                </div>
+              ) : (
+                <div>
+                  <form onSubmit={(e) => e.preventDefault()}>
+                    <TextField
+                      type="email"
+                      label="Email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      autoComplete="email"
+                      fullWidth
+                      required
+                      margin="normal"
+                    />
+                    <TextField
+                      type="password"
+                      label="Password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      autoComplete="current-password"
+                      fullWidth
+                      required
+                      margin="normal"
+                    />
+                    <Button variant="contained" color="primary" onClick={handleLogin}>
+                      Login
+                    </Button>
+                  </form>
+                  {errors && <Typography color="error">{errors}</Typography>}
+                </div>
+              )}
             </Grid>
           </Grid>
-          {errorMessage && (
-            <Typography variant="body2" color="error" align="center" style={{ marginTop: '10px' }}>
-              {errorMessage}
-            </Typography>
-          )}
-        </form>
-      </Paper>
+        </Paper>
+      </Box>
     </Container>
   );
-}
+};
 
 export default Login;

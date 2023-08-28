@@ -10,47 +10,54 @@ import PeopleIcon from '@mui/icons-material/People';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import LayersIcon from '@mui/icons-material/Layers';
 
-function Sidebar({ disabled }) {
+function Sidebar( ) {
   return (
     <div>
       <Divider />
       <List>
-        <ListItemButton component={Link} to="/"  disabled={disabled}>
+        <ListItemButton component={Link} to="/"  >
           <ListItemIcon>
             <DashboardIcon />
           </ListItemIcon>
           <ListItemText primary="Dashboard" />
         </ListItemButton>
-        <ListItemButton component={Link} to="/semestre"  disabled={disabled}>
+        <ListItemButton component={Link} to="/semestre"  >
           <ListItemIcon>
             <DashboardIcon />
           </ListItemIcon>
           <ListItemText primary="Semestres" />
         </ListItemButton>
-        <ListItemButton component={Link} to="/modules" disabled={disabled}>
+        <ListItemButton component={Link} to="/modules" >
           <ListItemIcon>
             <DashboardIcon />
           </ListItemIcon>
           <ListItemText primary="Modules" />
         </ListItemButton>
-        <ListItemButton component={Link} to="/professeur" disabled={disabled}>
+        <ListItemButton component={Link} to="/professeurs">
           <ListItemIcon>
             <PeopleIcon />
           </ListItemIcon>
           <ListItemText primary="Professeurs" />
         </ListItemButton>
-        <ListItemButton component={Link} to="/reports" disabled={disabled}>
+        <ListItemButton component={Link} to="/classes" >
           <ListItemIcon>
             <BarChartIcon />
           </ListItemIcon>
-          <ListItemText primary="Reports" />
+          <ListItemText primary="Classes" />
         </ListItemButton>
-        <ListItemButton component={Link} to="/integrations" disabled={disabled}>
+        <ListItemButton component={Link} to="/integrations" >
           <ListItemIcon>
             <LayersIcon />
           </ListItemIcon>
           <ListItemText primary="Integrations" />
         </ListItemButton>
+        <ListItemButton component={Link} to="/createcourse" >
+          <ListItemIcon>
+            <LayersIcon />
+          </ListItemIcon>
+          <ListItemText primary="Creer Cours" />
+        </ListItemButton>
+
       </List>
     </div>
   );

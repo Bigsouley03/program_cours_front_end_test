@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { useState, useEffect } from 'react';
 import { styled } from '@mui/material/styles';
 import MuiAppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
@@ -8,10 +8,8 @@ import Badge from '@mui/material/Badge';
 import MenuIcon from '@mui/icons-material/Menu';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import Divider from '@mui/material/Divider';
-import { Link } from 'react-router-dom';
 import { Button } from '@mui/material';
-
-
+import axios from 'axios';
 
 const AppBar = styled(MuiAppBar, {
   shouldForwardProp: (prop) => prop !== 'open',
@@ -31,23 +29,53 @@ const AppBar = styled(MuiAppBar, {
   }),
 }));
 
-export default function Header({ open, onDrawerOpen }) {
+const Header = ({ open, onDrawerOpen, accessToken, setAccessToken }) => {
+  const [csrfToken, setCsrfToken] = useState('');
+
+  useEffect(() => {
+    // Fetch CSRF token from your Laravel backend
+    const fetchCsrfToken = async () => {
+      try {
+        const response = await axios.get('http://127.0.0.1:8000/sanctum/csrf-cookie');
+        setCsrfToken(response.data.csrfToken);
+      } catch (error) {
+        console.error('Failed to fetch CSRF token:', error);
+      }
+    };
+
+    fetchCsrfToken();
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      // Call the logout endpoint to invalidate the token
+      await axios.post(
+        'http://127.0.0.1:8000/api/logout',
+        {},
+        {
+          headers: {
+            'X-CSRF-TOKEN': csrfToken,
+            'Authorization': `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      // Clear access token
+      setAccessToken('');
+    } catch (error) {
+      console.error('Logout failed:', error.message);
+    }
+  };
+
   return (
     <AppBar position="absolute" open={open}>
-      <Toolbar
-        sx={{
-          pr: '24px',
-        }}
-      >
+      <Toolbar sx={{ pr: '24px' }}>
         <IconButton
           edge="start"
           color="inherit"
           aria-label="open drawer"
           onClick={onDrawerOpen}
-          sx={{
-            marginRight: '36px',
-            ...(open && { display: 'none' }),
-          }}
+          sx={{ marginRight: '36px', ...(open && { display: 'none' }) }}
         >
           <MenuIcon />
         </IconButton>
@@ -59,11 +87,13 @@ export default function Header({ open, onDrawerOpen }) {
             <NotificationsIcon />
           </Badge>
         </IconButton>
-        <Link to="/login" style={{ textDecoration: 'none', color: 'inherit' }}>
-          <Button color="inherit">Logout</Button>
-        </Link>
+        <Button color="inherit" onClick={handleLogout}>
+          Logout
+        </Button>
       </Toolbar>
       <Divider />
     </AppBar>
   );
-}
+};
+
+export default Header;
