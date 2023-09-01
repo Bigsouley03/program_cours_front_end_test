@@ -59,13 +59,17 @@ const Header = ({ open, onDrawerOpen, accessToken, setAccessToken }) => {
           },
         }
       );
-
+  
       // Clear access token
       setAccessToken('');
+  
+      // Redirect to the login page or any other page after logout
+      // history.push('/login');
     } catch (error) {
       console.error('Logout failed:', error.message);
     }
   };
+  
 
   return (
     <AppBar position="absolute" open={open}>

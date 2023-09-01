@@ -1,126 +1,99 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { Typography, TextField, Button, Container } from '@mui/material';
+import React, { useState } from 'react';
+import Modal from '@mui/material/Modal';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
 
-const Login = ({accessToken, setAccessToken}) => {
+function CreateCoursModal({ open, onClose, onAdd }) {
+  const [newCourse, setNewCourse] = useState({
+    moduleName: '',
+    objectifs: '',
+    className: '',
+  });
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [errors, setErrors] = useState('');
-  const [csrfToken, setCsrfToken] = useState('');
-
-  useEffect(() => {
-    // Fetch CSRF token from your Laravel backend
-    const fetchCsrfToken = async () => {
-      try {
-        const response = await axios.get('http://127.0.0.1:8000/sanctum/csrf-cookie');
-        setCsrfToken(response.data.csrfToken);
-      } catch (error) {
-        console.error('Failed to fetch CSRF token:', error);
-      }
-    };
-
-    fetchCsrfToken();
-  }, []);
-
-  const handleLogin = async () => {
-    try {
-      const loginResponse = await axios.post(
-        'http://127.0.0.1:8000/api/login',
-        {
-          email: email,
-          password: password,
-        },
-        {
-          headers: {
-            'X-CSRF-TOKEN': csrfToken,
-          },
-        }
-      );
-
-      // Set access token in state
-      setAccessToken(loginResponse.data.access_token);
-
-      // Clear form fields and errors
-      setEmail('');
-      setPassword('');
-      setErrors('');
-        console.log('login successfull')
-      // Redirect to dashboard after successful login
-      //history.push('/');
-    } catch (error) {
-      if (error.response) {
-        setErrors(error.response.data.message);
-      } else {
-        console.error('An error occurred:', error.message);
-      }
-    }
+  const handleInputChange = (event) => {
+    const { name, value } = event.target;
+    setNewCourse({
+      ...newCourse,
+      [name]: value,
+    });
   };
 
-  const handleLogout = async () => {
-    try {
-      // Call the logout endpoint to invalidate the token
-      await axios.post(
-        'http://127.0.0.1:8000/api/logout',
-        {},
-        {
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-          },
-        }
-      );
-
-      // Clear access token
-      setAccessToken('');
-    } catch (error) {
-      console.error('Logout failed:', error.message);
-    }
+  const handleAddCourse = () => {
+    // Perform any logic you need to add a new course
+    // Then, call the onAdd function to update the parent component's state
+    onAdd(newCourse);
+    // Clear the input fields
+    setNewCourse({
+      moduleName: '',
+      objectifs: '',
+      className: '',
+    });
+    // Close the modal
+    onClose();
   };
 
   return (
-    <Container maxWidth="sm">
-      <Typography variant="h4" gutterBottom>
-        Login
-      </Typography>
-      {accessToken ? (
-        <div>
-          <Typography variant="body1">You are logged in!</Typography>
-          <Button variant="contained" color="primary" onClick={handleLogout}>
-            Logout
-          </Button>
-        </div>
-      ) : (
-        <div>
-          <form onSubmit={(e) => e.preventDefault()}>
-            <TextField
-              type="email"
-              label="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoComplete="email"
-              fullWidth
-              required
-              margin="normal"
-            />
-            <TextField
-              type="password"
-              label="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
-              fullWidth
-              required
-              margin="normal"
-            />
-            <Button variant="contained" color="primary" onClick={handleLogin}>
-              Login
-            </Button>
-          </form>
-          {errors && <Typography color="error">{errors}</Typography>}
-        </div>
-      )}
-    </Container>
+    <Modal open={open} onClose={onClose}>
+      <Box
+        sx={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: 400,
+          bgcolor: 'background.paper',
+          boxShadow: 24,
+          p: 4,
+        }}
+      >
+        <Typography variant="h6" gutterBottom>
+          Ajouter un nouveau cours
+        </Typography>
+        <TextField
+          label="Module"
+          name="moduleName"
+          value={newCourse.moduleName}
+          onChange={handleInputChange}
+          fullWidth
+          margin="normal"
+        />
+        <TextField
+          label="Objectifs"
+          name="objectifs"
+          value={newCourse.objectifs}
+          onChange={handleInputChange}
+          fullWidth
+          margin="normal"
+        />
+        <TextField
+          label="Classe"
+          name="className"
+          value={newCourse.className}
+          onChange={handleInputChange}
+          fullWidth
+          margin="normal"
+        />
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleAddCourse}
+          disabled={!newCourse.moduleName || !newCourse.objectifs || !newCourse.className}
+          sx={{ mt: 2 }}
+        >
+          Ajouter le cours
+        </Button>
+        <Button
+          variant="contained"
+          onClick={onClose}
+          sx={{ mt: 2, ml: 2 }}
+        >
+          Annuler
+        </Button>
+      </Box>
+    </Modal>
   );
-};
+}
 
-export default Login;
+export default CreateCoursModal;

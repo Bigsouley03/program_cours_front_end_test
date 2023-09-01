@@ -17,9 +17,9 @@ import TableBody from '@mui/material/TableBody';
 import axios from 'axios';
 import Toolbar from '@mui/material/Toolbar';
 import IconButton from '@mui/material/IconButton';
-import AddClassModal from '../Components/Modals/ClassModal/AddClassModal';
-import DeleteClassModal from '../Components/Modals/ClassModal/DeleteClassModal';
-import EditClassModal from '../Components/Modals/ClassModal/EditClassModal';
+import AddClassModal from '../../Components/Modals/ClassModal/AddClassModal';
+import DeleteClassModal from '../../Components/Modals/ClassModal/DeleteClassModal';
+import EditClassModal from '../../Components/Modals/ClassModal/EditClassModal';
 
 function Classe() {
   const [rows, setRows] = useState([]);
@@ -31,6 +31,9 @@ function Classe() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [selectedClassId, setSelectedClassId] = useState(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
+
+
+
 
   const openEditModal = (id, className, status) => {
     setEditingId(id);
@@ -50,6 +53,9 @@ function Classe() {
         .catch(error => console.error('Error toggling Class status:', error));
     }
   };
+
+
+  
 
   const closeEditModal = (id) => {
     setEditingId(null);
@@ -214,6 +220,16 @@ function Classe() {
                             )}
 
                           </TableCell>
+                          <TableCell sx={{ fontSize: '16px' }}>
+                          {/* Bouton "Voir les détails" */}
+                          <Button
+                            variant="outlined"
+                            color="primary"
+                            size="small"
+                          >
+                              Voir les détails
+                            </Button>
+                          </TableCell>
                         </TableRow>
                       ))}
                       <TableRow>
@@ -221,6 +237,7 @@ function Classe() {
                       </TableRow>
                     </TableBody>
                   </Table>
+
                   <EditClassModal
                     open={editModalOpen}
                     onClose={() => setEditModalOpen(false)}

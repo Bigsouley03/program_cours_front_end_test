@@ -13,27 +13,51 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
-import CreateCoursModal from '../Components/Modals/CoursesModal/CreateCoursModal';
-
 import axios from 'axios';
 import Modal from '@mui/material/Modal';
+import CreateCoursModal from '../Components/Modals/CoursesModal/CreateCoursModal';
 
 const apiUrl = 'http://localhost:8000/api';
 const defaultTheme = createTheme();
-
 function EnroullerCours() {
-  const [classes, setClasses] = useState([]);
-  const [selectedClass, setSelectedClass] = useState(null);
   const [modules, setModules] = useState([]);
   const [professeurs, setProfesseurs] = useState([]);
   const [semestres, setSemestres] = useState([]);
+  const [classes, setClasses] = useState([]);
   const [cours_enrollers, setCoursEnrollers] = useState([]);
+  const [selectedCours, setSelectedCours] = useState(null);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const history = useHistory();
 
-  const handleOpenDetailsModal = (classId) => {
-    setSelectedClass(classId);
-    history.push(`/details/${classId}`);
+  const handleOpenModal = (cours_enroller) => {
+    console.log()
+    setSelectedCours(cours_enroller);
+    history.push('/suivi', { selectedCours: cours_enroller });
+  };
+
+
+  const handleCloseModal = () => {
+    setSelectedCours(null);
+  };
+
+  const getCoursEnrollers = () => {
+    axios.get(apiUrl + '/coursE')
+      .then(response => {
+        setCoursEnrollers(response.data.cours);
+      })
+      .catch(error => {
+        console.error('Erreur lors de la récupération des cours enrollers :', error);
+      });
+  };
+
+  const getModules = () => {
+    axios.get(apiUrl + '/module')
+      .then(response => {
+        setModules(response.data.modules);
+      })
+      .catch(error => {
+        console.error('Erreur lors de la récupération des modules :', error);
+      });
   };
 
   const getClasses = () => {
@@ -45,16 +69,7 @@ function EnroullerCours() {
         console.error('Erreur lors de la récupération des classes :', error);
       });
   };
-  const getModules = () => {
-    axios.get(apiUrl + '/module')
-      .then(response => {
-        setModules(response.data.modules);
-      })
-      .catch(error => {
-        console.error('Erreur lors de la récupération des modules :', error);
-      });
-  };
-
+  
   const getProfesseurs = () => {
     axios.get(apiUrl + '/professeur')
       .then(response => {
@@ -75,23 +90,12 @@ function EnroullerCours() {
       });
   };
 
-  const getCoursEnrollers = () => {
-    axios.get(apiUrl + '/coursE')
-      .then(response => {
-        setCoursEnrollers(response.data.cours);
-      })
-      .catch(error => {
-        console.error('Erreur lors de la récupération des cours enrollers :', error);
-      });
-  };
-
-
   useEffect(() => {
-    getClasses();
     getCoursEnrollers();
     getModules();
-    getSemestres();
+    getClasses();
     getProfesseurs();
+    getSemestres();
   }, []);
 
   return (
@@ -139,18 +143,30 @@ function EnroullerCours() {
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {classes.map((classItem) => (
-                        <TableRow key={classItem.id}>
-                          <TableCell>{classItem.className}</TableCell>
+                      {cours_enrollers.map((cours_enroller) => (
+                        <TableRow key={cours_enroller.id}>
                           <TableCell>
-                            <Button
+                            <TableCell>{cours_enroller.classe_id.className}</TableCell>
+                          </TableCell>
+                          <TableCell>
+                            <TableCell>
+                              <Button                             
                               variant="outlined"
                               color="primary"
-                              size="small"
-                              onClick={() => handleOpenDetailsModal(classItem.id)}
-                            >
-                              Détails
-                            </Button>
+                              size="small" 
+                              onClick={() => handleOpenModal(cours_enroller)}
+                              >Détails
+                              </Button>
+                              </TableCell>
+                              <TableCell>
+                              <Button                             
+                              variant="outlined"
+                              color="primary"
+                              size="small" 
+                              onClick={() => handleOpenModal(cours_enroller)}
+                              >Suivre Cours
+                              </Button>
+                              </TableCell>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -169,6 +185,57 @@ function EnroullerCours() {
               </Grid>
             </Grid>
           </Container>
+
+          <Modal open={selectedCours !== null} onClose={handleCloseModal}>
+            <Box
+              sx={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: 400,
+                bgcolor: 'background.paper',
+                boxShadow: 24,
+                p: 4,
+              }}
+            >
+              <Typography variant="h6" gutterBottom>
+                Détails du cours
+              </Typography>
+              {selectedCours && (
+                <Box>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Module: {selectedCours.module_id.moduleName}
+                  </Typography>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Nom du Professeur: {selectedCours.professeur_id.name}
+                  </Typography>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Objectifs: {selectedCours.objectifs}
+                  </Typography>
+                  <Typography variant="subtitle1" gutterBottom>
+                   Responsable de Classe: {selectedCours.classe_id.etudiant_id.etudiant_name}
+                  </Typography>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Heure Totale: {selectedCours.heureTotal}
+                  </Typography>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Heure Deroule: {selectedCours.heureDeroule}
+                  </Typography>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Heures Restantes: {selectedCours.heureRestant}
+                  </Typography>
+                </Box>
+              )}
+              <Button
+                variant="contained"
+                onClick={handleCloseModal}
+                sx={{ mt: 2 }}
+              >
+                Fermer
+              </Button>
+            </Box>
+          </Modal>
         </Box>
       </Box>
     </ThemeProvider>

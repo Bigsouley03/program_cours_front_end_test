@@ -22,22 +22,22 @@ const apiUrl = 'http://localhost:8000/api';
 const defaultTheme = createTheme();
 
 function Professeur() {
-  const [users, setUsers] = useState([]);
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [professeurs, setProfesseurs] = useState([]);
+  const [selectedProfesseur, setSelectedProfesseur] = useState(null);
 
   const handleOpenModal = (user) => {
-    setSelectedUser(user);
+    setSelectedProfesseur(user);
   };
 
   const handleCloseModal = () => {
-    setSelectedUser(null);
+    setSelectedProfesseur(null);
   };
 
 
   useEffect(() => {
-    axios.get(apiUrl + '/users')
+    axios.get(apiUrl + '/professeur')
       .then(response => {
-        setUsers(response.data);
+        setProfesseurs(response.data);
       })
       .catch(error => console.error('Erreur lors de la récupération des utilisateurs :', error));
   }, []);
@@ -75,20 +75,20 @@ function Professeur() {
                   <Table size="small">
                     <TableHead>
                       <TableRow>
-                        <TableCell sx={{ fontSize: '18px' }}>Avatar</TableCell>
+                        <TableCell sx={{ fontSize: '18px' }}></TableCell>
                         <TableCell sx={{ fontSize: '18px' }}>Nom</TableCell>
                         <TableCell sx={{ fontSize: '18px' }}>Actions</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {users.map((user) => (
-                        <TableRow key={user.id}>
-                          <TableCell>
-                            <Avatar alt={user.name} src={user.avatar_url} />
+                      {professeurs.map((professeur) => (
+                        <TableRow key={professeur.id}>
+                          <TableCell sx={{ fontSize: '16px' }}>
+                            <Avatar alt={professeur.name} src={professeur.avatar_url} />
                           </TableCell>
-                          <TableCell>{user.name}</TableCell>
-                          <TableCell>
-                            <Button onClick={() => handleOpenModal(user)}>Voir détails</Button>
+                          <TableCell sx={{ fontSize: '16px' }}>{professeur.name}</TableCell>
+                          <TableCell sx={{ fontSize: '16px' }}>
+                            <Button onClick={() => handleOpenModal(professeur)}>Voir détails</Button>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -100,7 +100,7 @@ function Professeur() {
           </Container>
 
           {/* Modal pour afficher les détails */}
-          <Modal open={selectedUser !== null} onClose={handleCloseModal}>
+          <Modal open={selectedProfesseur !== null} onClose={handleCloseModal}>
             <Box
               sx={{
                 position: 'absolute',
@@ -117,10 +117,16 @@ function Professeur() {
               Détails du professeur
               </DialogContentText>                
 
-              {selectedUser && (
+              {selectedProfesseur && (
                 <Box>
                   <Typography variant="subtitle1" gutterBottom>
-                    Nom du professeur: {selectedUser.name}
+                    Nom : {selectedProfesseur.name}
+                  </Typography>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Email: {selectedProfesseur.email}
+                  </Typography>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Adresse: {selectedProfesseur.adresse}
                   </Typography>
                   {/* Ajouter d'autres détails ici en utilisant des composants Typography */}
                 </Box>

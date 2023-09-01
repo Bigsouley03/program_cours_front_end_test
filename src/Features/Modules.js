@@ -33,6 +33,7 @@ function Module() {
   const [editModalOpen, setEditModalOpen] = useState(false);
 
 
+
   const openEditModal = (id,moduleName, status) => {
     setEditingId(id);
     setEditedModuleName(moduleName);
@@ -53,6 +54,7 @@ function Module() {
       })
       .catch(error => console.error('Error fetching data:', error));
   }, []);
+  
 
   const saveEditedModule = (id) => {
     const updatedRow = rows.find(row => row.id === id);
@@ -243,6 +245,7 @@ function Module() {
                     onClose={() => setAddModalOpen(false)}
                     onAdd={(addedModule) => setRows([...rows, addedModule])}
                   />
+
                 </Paper>
               </Grid>
             </Grid>

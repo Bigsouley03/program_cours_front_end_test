@@ -14,7 +14,7 @@ import Grid from '@mui/material/Grid';
 import Paper from '@mui/material/Paper';
 import Module from '../../Features/Modules';
 import Charts from '../../Features/Charts';
-import Classes from '../../Features/Classes';
+import Classes from '../../Features/Classe/Classes';
 import EnroullerCours from '../../Features/EnroullerCours';
 import Professeurs from '../../Features/Professeurs';
 import Semestres from '../../Features/Semestres';
@@ -22,6 +22,8 @@ import Sidebar from './SideBar';
 import Header from './Header';
 import Dashboard from '../../Features/Dashboard'
 import Profil from './Profil';
+import CoursDerouler from '../../Features/CoursDerouler';
+import ClasseDetails from '../../Features/Classe/ClasseDetails';
 
 
 
@@ -122,6 +124,9 @@ export default function DashboardLayout({accessToken,setAccessToken}) {
                       <Route path="/professeurs" component={Professeurs} />
                       <Route path="/semestre" component={Semestres} />
                       <Route path="/profil" component={Profil} />
+                      <Route path="/suivi" component={CoursDerouler} />
+                      <Route exact path="/details/:classId" component={ClasseDetails} />
+
                       {/* <Route path="/login" component={Login} />
                       <Route path="/register" component={Register} /> */}
 

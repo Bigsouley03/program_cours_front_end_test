@@ -45,18 +45,13 @@ function Sidebar( ) {
           </ListItemIcon>
           <ListItemText primary="Classes" />
         </ListItemButton>
-        <ListItemButton component={Link} to="/integrations" >
-          <ListItemIcon>
-            <LayersIcon />
-          </ListItemIcon>
-          <ListItemText primary="Integrations" />
-        </ListItemButton>
         <ListItemButton component={Link} to="/createcourse" >
           <ListItemIcon>
             <LayersIcon />
           </ListItemIcon>
-          <ListItemText primary="Creer Cours" />
+          <ListItemText primary="Cours" />
         </ListItemButton>
+
 
       </List>
     </div>

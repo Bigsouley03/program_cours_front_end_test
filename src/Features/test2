@@ -1,0 +1,119 @@
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import axios from 'axios';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+
+const apiUrl = 'http://localhost:8000/api';
+
+function ClasseDetails() {
+  const { classId } = useParams();
+  const [classDetails, setClassDetails] = useState(null);
+  const [modules, setModules] = useState([]);
+  const [professeurs, setProfesseurs] = useState([]);
+  const [semestres, setSemestres] = useState([]);
+  const [cours_enrollers, setCoursEnrollers] = useState([]);
+
+  const getModules = () => {
+    axios.get(apiUrl + '/module')
+      .then(response => {
+        setModules(response.data.modules);
+      })
+      .catch(error => {
+        console.error('Erreur lors de la récupération des modules :', error);
+      });
+  };
+
+  const getProfesseurs = () => {
+    axios.get(apiUrl + '/professeur')
+      .then(response => {
+        setProfesseurs(response.data);
+      })
+      .catch(error => {
+        console.error('Erreur lors de la récupération des utilisateurs :', error);
+      });
+  };
+  
+  const getSemestres = () => {
+    axios.get(apiUrl + '/semestre')
+      .then(response => {
+        setSemestres(response.data.Semestres);
+      })
+      .catch(error => {
+        console.error('Erreur lors de la récupération des semestres :', error);
+      });
+  };
+
+  const getCoursEnrollers = () => {
+    axios.get(apiUrl + '/coursE')
+      .then(response => {
+        setCoursEnrollers(response.data.cours);
+      })
+      .catch(error => {
+        console.error('Erreur lors de la récupération des cours enrollers :', error);
+      });
+  };
+
+  const getCourseByClasseId = (classId) => {
+    return axios.get(`${apiUrl}/coursE/showClassById/${classId}`)
+      .then(response => {
+        return response.data.classe;
+      })
+      .catch(error => {
+        console.error('Erreur lors de la récupération des détails de la classe :', error);
+        throw error; // Re-throw the error to handle it outside this function if needed
+      });
+  };
+
+  useEffect(() => {
+    getCoursEnrollers();
+    getModules();
+    getProfesseurs();
+    getSemestres();
+    
+    getCourseByClasseId(classId)
+      .then(classDetails => {
+        setClassDetails(classDetails);
+      })
+      .catch(error => {
+        console.error('Erreur lors de la récupération des détails de la classe :', error);
+        // Handle error if needed
+      });
+  }, [classId]);
+
+  if (!classDetails) {
+    return <div>Loading...</div>;
+  }
+
+  return (
+    <Box
+      sx={{
+        padding: '24px',
+        backgroundColor: (theme) =>
+          theme.palette.mode === 'light'
+            ? theme.palette.grey[100]
+            : theme.palette.grey[900],
+        minHeight: '100vh',
+      }}
+    >
+      <Typography variant="h5" gutterBottom>
+        Détails de la classe: {classDetails.className}
+      </Typography>
+      <Typography variant="subtitle1" gutterBottom>
+        Modules assignés à cette classe:
+      </Typography>
+      <List>
+        {classDetails.modules.map((module, index) => (
+          <ListItem key={index}>
+            <ListItemText primary={module.moduleName} />
+          </ListItem>
+        ))}
+      </List>
+    </Box>
+  );
+}
+
+export default ClasseDetails;
