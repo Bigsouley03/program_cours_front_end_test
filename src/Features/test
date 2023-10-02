@@ -1,245 +1,151 @@
 import React, { useState, useEffect } from 'react';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import Container from '@mui/material/Container';
-import Grid from '@mui/material/Grid';
-import Button from '@mui/material/Button';
-import Paper from '@mui/material/Paper';
-import Box from '@mui/material/Box';
-import { useHistory } from 'react-router-dom';
-import Typography from '@mui/material/Typography';
-import TableCell from '@mui/material/TableCell';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
+import {  useParams } from 'react-router-dom';
 import axios from 'axios';
 import Modal from '@mui/material/Modal';
-import CreateCoursModal from '../Components/Modals/CoursesModal/CreateCoursModal';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+import Grid from '@mui/material/Grid';
+import { Card, CardContent } from '@mui/material';
+import SuivreCoursModal from '../../Components/Modals/CoursesModal/SuivreCoursModal';
 
 const apiUrl = 'http://localhost:8000/api';
-const defaultTheme = createTheme();
-function EnroullerCours() {
-  const [modules, setModules] = useState([]);
-  const [professeurs, setProfesseurs] = useState([]);
-  const [semestres, setSemestres] = useState([]);
-  const [classes, setClasses] = useState([]);
-  const [cours_enrollers, setCoursEnrollers] = useState([]);
-  const [selectedCours, setSelectedCours] = useState(null);
-  const [addModalOpen, setAddModalOpen] = useState(false);
-  const history = useHistory();
 
-  const handleOpenModal = (cours_enroller) => {
-    console.log()
-    setSelectedCours(cours_enroller);
-    history.push('/suivi', { selectedCours: cours_enroller });
-  };
+const modalStyle = {
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: 400,
+  bgcolor: 'background.paper',
+  boxShadow: 24,
+  p: 4,
+};
 
-
-  const handleCloseModal = () => {
-    setSelectedCours(null);
-  };
-
-  const getCoursEnrollers = () => {
-    axios.get(apiUrl + '/coursE')
-      .then(response => {
-        setCoursEnrollers(response.data.cours);
-      })
-      .catch(error => {
-        console.error('Erreur lors de la récupération des cours enrollers :', error);
-      });
+function ClasseDetails() {
+  const { classId } = useParams();
+  const [classDetails, setClassDetails] = useState(null);
+  const [courses, setCourses] = useState([]);
+  const [selectedCourse, setSelectedCourse] = useState(null);
+  const [modalIsOpen, setModalIsOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const handleModalOpen = () => {
+    setModalOpen(true);
   };
 
-  const getModules = () => {
-    axios.get(apiUrl + '/module')
-      .then(response => {
-        setModules(response.data.modules);
-      })
-      .catch(error => {
-        console.error('Erreur lors de la récupération des modules :', error);
-      });
+  const handleModalClose = () => {
+    setModalOpen(false);
   };
 
-  const getClasses = () => {
-    axios.get(apiUrl + '/classe')
-      .then(response => {
-        setClasses(response.data.classes);
-      })
-      .catch(error => {
-        console.error('Erreur lors de la récupération des classes :', error);
-      });
+  const handleSaveSuivi = (formData) => {
+    // Handle saving the suivi data to the server
+    console.log(formData);
   };
-  
-  const getProfesseurs = () => {
-    axios.get(apiUrl + '/professeur')
-      .then(response => {
-        setProfesseurs(response.data);
-      })
-      .catch(error => {
-        console.error('Erreur lors de la récupération des utilisateurs :', error);
-      });
-  };
-  
-  const getSemestres = () => {
-    axios.get(apiUrl + '/semestre')
-      .then(response => {
-        setSemestres(response.data.Semestres);
-      })
-      .catch(error => {
-        console.error('Erreur lors de la récupération des semestres :', error);
-      });
-  };
+
 
   useEffect(() => {
-    getCoursEnrollers();
-    getModules();
-    getClasses();
-    getProfesseurs();
-    getSemestres();
-  }, []);
+    axios.get(`${apiUrl}/showClasse/${classId}`)
+      .then(response => {
+        setClassDetails(response.data);
+      })
+      .catch(error => {
+        console.error('Erreur lors de la récupération des détails de la classe :', error);
+      });
+
+    axios.get(`${apiUrl}/coursE/showClassById/${classId}`)
+      .then(response => {
+        setCourses(response.data.cours);
+      })
+      .catch(error => {
+        console.error('Erreur lors de la récupération des cours enroulés :', error);
+      });
+  }, [classId]);
+
+  const openModal = (course) => {
+    setSelectedCourse(course);
+    setModalIsOpen(true);
+  };
+
+  const closeModal = () => {
+    setSelectedCourse(null);
+    setModalIsOpen(false);
+  };
 
   return (
-    <ThemeProvider theme={defaultTheme}>
-      <Box sx={{ display: 'flex' }}>
-        <CssBaseline />
-        <Box
-          component="main"
-          sx={{
-            backgroundColor: (theme) =>
-              theme.palette.mode === 'light'
-                ? theme.palette.grey[100]
-                : theme.palette.grey[900],
-            flexGrow: 1,
-            height: '100vh',
-            overflow: 'auto',
-          }}
-        >
-          <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={8} lg={16}>
-                <Grid container alignItems="center" justifyContent="space-between" sx={{ mb: 4 }}>
-                  <Typography variant="h4">Liste des Cours Enrollés</Typography>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={() => setAddModalOpen(true)}
-                  >
-                    Enrouler un nouveau Cours
-                  </Button>
-                </Grid>
-                <Paper
-                  sx={{
-                    p: 4,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    width: '100%',
-                  }}
-                >
-                  <Table size="small">
-                    <TableHead>
-                      <TableRow>
-                        <TableCell sx={{ fontSize: '18px' }}>Classes Ajoutees</TableCell>
-                        <TableCell sx={{ fontSize: '18px' }}>Actions</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {cours_enrollers.map((cours_enroller) => (
-                        <TableRow key={cours_enroller.id}>
-                          <TableCell>
-                            <TableCell>{cours_enroller.classe_id.className}</TableCell>
-                          </TableCell>
-                          <TableCell>
-                            <TableCell>
-                              <Button                             
-                              variant="outlined"
-                              color="primary"
-                              size="small" 
-                              onClick={() => handleOpenModal(cours_enroller)}
-                              >Détails
-                              </Button>
-                              </TableCell>
-                              <TableCell>
-                              <Button                             
-                              variant="outlined"
-                              color="primary"
-                              size="small" 
-                              onClick={() => handleOpenModal(cours_enroller)}
-                              >Suivre Cours
-                              </Button>
-                              </TableCell>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                  <CreateCoursModal
-                    open={addModalOpen}
-                    onClose={() => setAddModalOpen(false)}
-                    onAdd={(addedCours) => setCoursEnrollers([...cours_enrollers, addedCours])}
-                    modules={modules}
-                    classes={classes}
-                    professeurs={professeurs}
-                    Semestres={semestres}
-                  />
-                </Paper>
-              </Grid>
-            </Grid>
-          </Container>
+    <Grid container spacing={3}>
+        <Grid >
+        {classDetails && (
+                 <Card sx={{ backgroundColor: '#1976d2', color: 'white', height: '100%' }}>
+                   <CardContent>
+                     <Typography variant="subtitle1">
+                       {classDetails.className}
+                     </Typography>
+                   </CardContent>
+                 </Card>
+        )}
+        </Grid>
 
-          <Modal open={selectedCours !== null} onClose={handleCloseModal}>
-            <Box
-              sx={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                width: 400,
-                bgcolor: 'background.paper',
-                boxShadow: 24,
-                p: 4,
-              }}
-            >
-              <Typography variant="h6" gutterBottom>
-                Détails du cours
-              </Typography>
-              {selectedCours && (
-                <Box>
-                  <Typography variant="subtitle1" gutterBottom>
-                    Module: {selectedCours.module_id.moduleName}
-                  </Typography>
-                  <Typography variant="subtitle1" gutterBottom>
-                    Nom du Professeur: {selectedCours.professeur_id.name}
-                  </Typography>
-                  <Typography variant="subtitle1" gutterBottom>
-                    Objectifs: {selectedCours.objectifs}
-                  </Typography>
-                  <Typography variant="subtitle1" gutterBottom>
-                   Responsable de Classe: {selectedCours.classe_id.etudiant_id.etudiant_name}
-                  </Typography>
-                  <Typography variant="subtitle1" gutterBottom>
-                    Heure Totale: {selectedCours.heureTotal}
-                  </Typography>
-                  <Typography variant="subtitle1" gutterBottom>
-                    Heure Deroule: {selectedCours.heureDeroule}
-                  </Typography>
-                  <Typography variant="subtitle1" gutterBottom>
-                    Heures Restantes: {selectedCours.heureRestant}
-                  </Typography>
-                </Box>
-              )}
-              <Button
+      <Grid item xs={12} >
+        <Typography variant="h6">Modules Assignés à cette classe</Typography>
+        {courses.length > 0 ? (
+          <List >
+            {courses.map(course => (
+              <ListItem key={course.id}>
+                <ListItemText
+                  primary={`Module : ${course.module_id.moduleName}`}
+                />
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  onClick={() => openModal(course)}
+                  style={{ marginRight: '16px' }}
+                >
+                  VOIR DETAILS
+                </Button>
+                <Button
                 variant="contained"
-                onClick={handleCloseModal}
-                sx={{ mt: 2 }}
-              >
-                Fermer
+                color="primary"
+                onClick={handleModalOpen}
+                >
+                  Faire le suivi
               </Button>
-            </Box>
-          </Modal>
+              </ListItem>
+            ))}
+          </List>
+        ) : (
+          <Typography variant="body1">Aucun module n'a été enroulé à cette classe.</Typography>
+        )}
+      </Grid>
+
+      <Modal
+        open={modalIsOpen}
+        onClose={closeModal}
+        aria-labelledby="Détails du module"
+      >
+        <Box sx={modalStyle}>
+          <Typography variant="h6">Détails du module</Typography>
+          {selectedCourse && (
+            <div>
+              <Typography><strong>Objectifs :</strong> {selectedCourse.objectifs}</Typography>
+              <Typography><strong>Nom du professeur :</strong> {selectedCourse.name}</Typography>
+              <Typography><strong>Nom  responsable :</strong> {selectedCourse.etudiant_name}</Typography>
+              <Typography><strong>Heure Totale :</strong> {selectedCourse.heureTotal}</Typography>
+            </div>
+          )}
+          <Button onClick={closeModal}>Fermer</Button>
         </Box>
-      </Box>
-    </ThemeProvider>
+      </Modal>
+      <SuivreCoursModal
+        open={modalOpen}
+        onClose={handleModalClose}
+        onSave={handleSaveSuivi}
+      />
+    </Grid>
+
   );
 }
 
-export default EnroullerCours;
+export default ClasseDetails;

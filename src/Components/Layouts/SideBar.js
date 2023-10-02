@@ -17,7 +17,7 @@ function Sidebar( ) {
       <List>
         <ListItemButton component={Link} to="/"  >
           <ListItemIcon>
-            <DashboardIcon />
+          <BarChartIcon />
           </ListItemIcon>
           <ListItemText primary="Dashboard" />
         </ListItemButton>
@@ -27,11 +27,23 @@ function Sidebar( ) {
           </ListItemIcon>
           <ListItemText primary="Semestres" />
         </ListItemButton>
+        <ListItemButton component={Link} to="/ue" >
+          <ListItemIcon>
+            <DashboardIcon />
+          </ListItemIcon>
+          <ListItemText primary="U.E" />
+        </ListItemButton>
         <ListItemButton component={Link} to="/modules" >
           <ListItemIcon>
             <DashboardIcon />
           </ListItemIcon>
           <ListItemText primary="Modules" />
+        </ListItemButton>
+        <ListItemButton component={Link} to="/programmes">
+          <ListItemIcon>
+          <DashboardIcon />
+          </ListItemIcon>
+          <ListItemText primary="Programmes" />
         </ListItemButton>
         <ListItemButton component={Link} to="/professeurs">
           <ListItemIcon>
@@ -45,7 +57,7 @@ function Sidebar( ) {
           </ListItemIcon>
           <ListItemText primary="Classes" />
         </ListItemButton>
-        <ListItemButton component={Link} to="/createcourse" >
+        <ListItemButton component={Link} to="/courses" >
           <ListItemIcon>
             <LayersIcon />
           </ListItemIcon>

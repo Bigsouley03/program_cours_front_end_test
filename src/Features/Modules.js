@@ -1,259 +1,120 @@
 import React, { useState, useEffect } from 'react';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import Container from '@mui/material/Container';
-import Grid from '@mui/material/Grid';
-import Button from '@mui/material/Button';
-import Paper from '@mui/material/Paper';
-import Box from '@mui/material/Box';
-import { Typography } from '@mui/material';
-import TableCell from '@mui/material/TableCell';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
+import {
+  List,
+  ListItem,
+  Typography,
+  Box,
+  Grid,
+  Button,
+  Paper,
+  Modal,
+  TextField,
+} from '@mui/material';
 import axios from 'axios';
-import Toolbar from '@mui/material/Toolbar';
-import IconButton from '@mui/material/IconButton';
-import AddModuleModal from '../Components/Modals/ModuleModal/AddModuleModal';
-import DeleteModuleModal from '../Components/Modals/ModuleModal/DeleteModuleModal';
-import EditModuleModal from '../Components/Modals/ModuleModal/EditModuleModal';
 
-function Module() {
-  const [rows, setRows] = useState([]);
-  const [editingId, setEditingId] = useState(null);
-  const [editedModuleName, setEditedModuleName] = useState('');
-  const [editedStatus, setEditedStatus] = useState('0');
-  const [newModuleName] = useState('');
-  const [addModalOpen, setAddModalOpen] = useState(false);
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [selectedModuleId, setSelectedModuleId] = useState(null);
-  const [editModalOpen, setEditModalOpen] = useState(false);
+export default function Modules() {
+  const apiUrl = 'http://localhost:8000/api';
 
+  const [modules, setModules] = useState([]);
+  const [newModule, setNewModule] = useState({ moduleName: '' });
+  const [openModalM, setOpenModalM] = useState(false);
 
-
-  const openEditModal = (id,moduleName, status) => {
-    setEditingId(id);
-    setEditedModuleName(moduleName);
-    setEditedStatus(status);
-    setEditModalOpen(true);
+  const paperStyle = {
+    padding: '20px',
+    height: '100%',
   };
 
-  const closeEditModal = (id) => {
-    setEditingId(null);
-    setEditModalOpen(false);
+  const typographyStyle = {
+    fontSize: '24px',
+  };
+
+  // Function to open the modal for creating a new module
+  const handleNewModule = () => {
+    setOpenModalM(true);
+  };
+
+  // Function to handle the creation of a new module
+  const handleCreateModule = () => {
+    // Add the "status" attribute with the initial value of 0 to the newModule object
+    const moduleData = { ...newModule, status: 0 };
+
+    // Send the data to your API endpoint for module creation
+    axios
+      .post(`${apiUrl}/storeModule`, moduleData)
+      .then((response) => {
+        // Close the modal and reset the form
+        setOpenModalM(false);
+        setNewModule({ moduleName: '' });
+
+        // Update the modules state with the new module
+        setModules([...modules, response.data]);
+
+        // Alternatively, you can directly access the moduleName
+        // and add it to the list without another API call like this:
+        // const { moduleName } = response.data;
+        // setModules([...modules, { moduleName }]);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
   };
 
   useEffect(() => {
-    axios.get(apiUrl + '/module')
-      .then(response => {
-        console.log(response);
-        setRows(response.data.modules); // Mettez à jour les données des modules ici
+    // Fetch the list of modules from the API
+    axios
+      .get(`${apiUrl}/module`)
+      .then((response) => {
+        setModules(response.data.modules);
       })
-      .catch(error => console.error('Error fetching data:', error));
+      .catch((error) => {
+        console.error('Error fetching modules:', error);
+      });
   }, []);
-  
-
-  const saveEditedModule = (id) => {
-    const updatedRow = rows.find(row => row.id === id);
-    if (updatedRow) {
-      axios.put(`${apiUrl}/updateModule/${id}`, { ...updatedRow, moduleName: editedModuleName, status: editedStatus })
-        .then(() => {
-          const updatedRows = rows.map(row => (row.id === id ? { ...row, moduleName: editedModuleName, status: editedStatus } : row));
-          setRows(updatedRows);
-          setEditingId(null);
-          closeEditModal();
-        })
-        .catch(error => console.error('Error saving edited module:', error));
-    }
-  };
-
-  const toggleStatus = (id) => {
-    const updatedRow = rows.find(row => row.id === id);
-    if (updatedRow) {
-      const updatedStatus = updatedRow.status === '1' ? '0' : '1';
-      axios.put(`${apiUrl}/module/${id}`, { ...updatedRow, status: updatedStatus })
-        .then(() => {
-          const updatedRows = rows.map(row => (row.id === id ? { ...row, status: updatedStatus } : row));
-          setRows(updatedRows);
-        })
-        .catch(error => console.error('Error toggling module status:', error));
-    }
-  };
-
-  const openDeleteModal = (id) => {
-    setSelectedModuleId(id);
-    setDeleteModalOpen(true);
-  };
-
-  const deleteModule = () => {
-    axios.delete(`${apiUrl}/deleteModule/${selectedModuleId}`)
-      .then(() => {
-        const updatedRows = rows.filter(row => row.id !== selectedModuleId);
-        setRows(updatedRows);
-        setDeleteModalOpen(false); // Fermer le modal de suppression
-      })
-      .catch(error => console.error('Error deleting module:', error));
-  };
-  
-  const apiUrl = 'http://localhost:8000/api';
-  const defaultTheme = createTheme();
 
   return (
-    <ThemeProvider theme={defaultTheme}>
-      <Box sx={{ display: 'flex' }}>
-        <CssBaseline />        
-        <Box
-          component="main"
-          sx={{
-            backgroundColor: (theme) =>
-            theme.palette.mode === 'light'
-              ? theme.palette.grey[100]
-              : theme.palette.grey[900],
-            flexGrow: 1,
-            height: '100vh',
-            overflow: 'auto',
+    <Grid item xs={12}>
+      <Paper elevation={3} style={paperStyle}>
+        <Box style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography variant="h5" style={typographyStyle}>
+            Liste des Modules
+          </Typography>
+          <Button variant="contained" color="primary" onClick={handleNewModule}>
+            Nouveau Module
+          </Button>
+        </Box>
+        <List>
+          {modules.map((module) => (
+            <ListItem key={module.id}>{module.moduleName}</ListItem>
+          ))}
+        </List>
+      </Paper>
+      <Modal open={openModalM} onClose={() => setOpenModalM(false)}>
+        <Paper
+          elevation={3}
+          style={{
+            position: 'fixed',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            padding: '20px',
+            width: '300px',
           }}
         >
-          <Toolbar />
-          <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={8} lg={16}>
-              <Grid container alignItems="center" justifyContent="space-between" sx={{ mb: 4 }}>
-                  <Typography variant="h4">Modules Recents</Typography>
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      onClick={() => setAddModalOpen(true)}
-                      disabled={newModuleName.trim()}
-                    >
-                      Ajouter Un Module
-                    </Button>
-                  </Grid>
-                <Paper
-                  sx={{
-                    p: 4,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    width: '100%', 
-                  }}
-                >
-                  <Table size="small">
-                    <TableHead>
-                      <TableRow>
-                        <TableCell sx={{ fontSize: '18px' }}>Nom du module</TableCell>
-                        <TableCell sx={{ fontSize: '18px' }}>Statut</TableCell>
-                        <TableCell sx={{ fontSize: '18px' }}>Actions</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {rows.map((row) => (
-                        <TableRow key={row.moduleName}>
-                          <TableCell sx={{ fontSize: '16px' }}>
-                            {editingId === row.id ? (
-                              <IconButton onClick={() => setEditModalOpen(true)}>
-                                <EditIcon />
-                              </IconButton>
-                            ) : (
-                              row.moduleName
-                            )}
-                          </TableCell>
-                          <TableCell sx={{ fontSize: '16px' }}>
-                            {editingId === row.id ? (
-                              <Button
-                                variant="outlined"
-                                color={editingId === row.id ? "primary" : (row.status === "1" ? "success" : "error")}
-                                size="small"
-                                onClick={
-                                  editingId === row.id
-                                    ? () => setEditedStatus(editedStatus === "1" ? "0" : "1")
-                                    : () => toggleStatus(row.id)
-                                }
-                              >
-                                {editingId === row.id
-                                  ? editedStatus === "1"
-                                    ? "On"
-                                    : "Off"
-                                  : row.status === "1"
-                                  ? "On"
-                                  : "Off"}
-                              </Button>
-                            ) : (
-                              <Button
-                                variant="outlined"
-                                color={editingId === row.id ? "primary" : (row.status === "1" ? "success" : "error")}
-                                size="small"
-                                onClick={
-                                  editingId === row.id
-                                    ? () => setEditedStatus(editedStatus === "1" ? "0" : "1")
-                                    : () => toggleStatus(row.id)
-                                }
-                              >
-                                {editingId === row.id
-                                  ? editedStatus === "1"
-                                    ? "On"
-                                    : "Off"
-                                  : row.status === "1"
-                                  ? "On"
-                                  : "Off"}
-                              </Button>
-                            )}
-                          </TableCell>
-                          <TableCell sx={{ fontSize: '16px' }}>
-                            {editingId === row.id ? (
-                              <IconButton onClick={() => saveEditedModule(row.id)} disabled={!editedModuleName}>
-                              </IconButton>
-                            ) : (
-                              <React.Fragment>
-                                <IconButton onClick={() => openEditModal(row.id, row.moduleName, row.status)}>
-                                  <EditIcon />
-                                </IconButton>
-                                <IconButton onClick={() => openDeleteModal(row.id)}>
-                                  <DeleteIcon />
-                                </IconButton>
-                              </React.Fragment>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                      <TableRow>
-                        <TableCell />
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-
-                  {/* Add Module Modal */}
-                  <EditModuleModal
-                    open={editModalOpen}
-                    onClose={() => setEditModalOpen(false)}
-                    moduleName={editedModuleName}
-                    status={editedStatus}
-                    onSave={() => saveEditedModule(editingId)}
-                    onStatusToggle={() => setEditedStatus(editedStatus === '1' ? '0' : '1')}
-                    onModuleNameChange={(e) => setEditedModuleName(e.target.value)}
-                  />
-                  {/* Delete Module Modal */}
-                  <DeleteModuleModal
-                    open={deleteModalOpen}
-                    onDelete={deleteModule}
-                    selectedModuleId={selectedModuleId}
-                  />
-                  <AddModuleModal
-                    open={addModalOpen}
-                    onClose={() => setAddModalOpen(false)}
-                    onAdd={(addedModule) => setRows([...rows, addedModule])}
-                  />
-
-                </Paper>
-              </Grid>
-            </Grid>
-          </Container>
-        </Box>
-      </Box>
-    </ThemeProvider>
+          <Typography variant="h5" style={typographyStyle}>
+            Créer un nouveau module
+          </Typography>
+          <TextField
+            label="Nom du module"
+            variant="outlined"
+            fullWidth
+            value={newModule.moduleName}
+            onChange={(e) => setNewModule({ moduleName: e.target.value })}
+          />
+          <Button variant="contained" color="primary" onClick={handleCreateModule}>
+            Créer
+          </Button>
+        </Paper>
+      </Modal>
+    </Grid>
   );
 }
-
-export default Module;

@@ -8,30 +8,35 @@ import {
   DialogTitle,
   TextField,
 } from '@mui/material';
-import axios from 'axios';
+//import axios from 'axios';
+import { useParams } from 'react-router-dom';
+
 
 function SuivreCoursModal({ open, onClose, onSave }) {
   const [nombreHeure, setNombreHeure] = useState('');
   const [date, setDate] = useState('');
-  const [objectif, setObjectif] = useState('');
+  const [objectifs, setObjectif] = useState('');
+  const { courseId } = useParams();
 
   const handleSave = async () => {
     const formData = {
       nombreHeure: parseInt(nombreHeure),
       date,
-      objectif,
+      objectifs,
+      cours_enroller_id: courseId, // Utilisez courseId au lieu de cours_enroller_id.id
     };
-
     try {
-      const response = await axios.post('/api/storeCoursD', formData);
-      console.log(response.data); // Handle success response
-      onSave(response.data.cours_derouler);
+      onSave(formData);
       onClose();
     } catch (error) {
       console.error(error);
-      // Handle error
     }
   };
+
+  // ...
+
+
+  
 
   return (
     <Dialog open={open} onClose={onClose}>
@@ -63,7 +68,7 @@ function SuivreCoursModal({ open, onClose, onSave }) {
           multiline
           rows={4}
           fullWidth
-          value={objectif}
+          value={objectifs}
           onChange={(e) => setObjectif(e.target.value)}
         />
 
@@ -72,7 +77,7 @@ function SuivreCoursModal({ open, onClose, onSave }) {
         <Button onClick={onClose} color="primary">
           Annuler
         </Button>
-        <Button onClick={handleSave} color="primary">
+        <Button onClick={handleSave}  color="primary">
           Enregistrer
         </Button>
       </DialogActions>

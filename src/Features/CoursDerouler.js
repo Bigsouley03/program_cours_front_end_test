@@ -7,7 +7,6 @@ function CoursDerouler() {
   const location = useLocation();
   const selectedCours = location.state.selectedCours;
   const [modalOpen, setModalOpen] = useState(false);
-  console.log(selectedCours)
   const handleModalOpen = () => {
     setModalOpen(true);
   };

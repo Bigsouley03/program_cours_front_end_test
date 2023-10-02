@@ -6,7 +6,7 @@ import Grid from '@mui/material/Grid';
 import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
 import Box from '@mui/material/Box';
-import { useHistory } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
 import Typography from '@mui/material/Typography';
 import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
@@ -115,6 +115,7 @@ function EnroullerCours() {
               <Grid item xs={12} md={8} lg={16}>
                 <Grid container alignItems="center" justifyContent="space-between" sx={{ mb: 4 }}>
                   <Typography variant="h4">Liste des Cours Enrollés</Typography>
+                  <Link to={`/createCours/`} >
                   <Button
                     variant="contained"
                     color="primary"
@@ -122,6 +123,7 @@ function EnroullerCours() {
                   >
                     Enrouler un nouveau Cours
                   </Button>
+                  </Link>
                 </Grid>
                 <Paper
                   sx={{

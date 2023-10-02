@@ -6,7 +6,7 @@ import Grid from '@mui/material/Grid';
 import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
 import Box from '@mui/material/Box';
-import { Typography } from '@mui/material';
+import { Modal, Typography } from '@mui/material';
 import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
@@ -31,6 +31,9 @@ function Classe() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [selectedClassId, setSelectedClassId] = useState(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+const [selectedClassDetails, setSelectedClassDetails] = useState(null);
+
 
 
 
@@ -97,6 +100,14 @@ function Classe() {
       })
       .catch(error => console.error('Error deleting Class:', error));
   };
+  const openDetailsModal = (className, etudiant_name, etudiant_email) => {
+    setSelectedClassDetails({
+      className,
+      etudiant_name,
+      etudiant_email,
+    });
+    setDetailsModalOpen(true);
+  };
 
   // Rest of the code for saving, toggling, deleting classes...
 
@@ -124,7 +135,7 @@ function Classe() {
             <Grid container spacing={3}>
               <Grid item xs={12} md={8} lg={16}>
                 <Grid container alignItems="center" justifyContent="space-between" sx={{ mb: 4 }}>
-                  <Typography variant="h4">Classes Recentes</Typography>
+                  <Typography variant="h4">Classes Récentes</Typography>
                   <Button
                     variant="contained"
                     color="primary"
@@ -226,9 +237,10 @@ function Classe() {
                             variant="outlined"
                             color="primary"
                             size="small"
+                            onClick={() => openDetailsModal(row.className, row.etudiant_name, row.etudiant_email)}
                           >
-                              Voir les détails
-                            </Button>
+                            Voir les détails
+                          </Button>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -237,6 +249,27 @@ function Classe() {
                       </TableRow>
                     </TableBody>
                   </Table>
+                  <Modal open={detailsModalOpen} onClose={() => setDetailsModalOpen(false)}>
+                  <Box sx={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        width: 400,
+                        bgcolor: 'background.paper',
+                        boxShadow: 24,
+                        p: 4,
+                      }}>
+                    <Typography variant="h6">Détails de la classe</Typography>
+                    {selectedClassDetails && (
+                      <div>
+                        <Typography><strong>Nom de la Classe :</strong> {selectedClassDetails.className}</Typography>
+                        <Typography><strong>Nom de l'Étudiant Responsable :</strong> {selectedClassDetails.etudiant_name}</Typography>
+                        <Typography><strong>Email de l'Étudiant Responsable:</strong> {selectedClassDetails.etudiant_email}</Typography>
+                      </div>
+                    )}
+                  </Box>
+                  </Modal>
 
                   <EditClassModal
                     open={editModalOpen}

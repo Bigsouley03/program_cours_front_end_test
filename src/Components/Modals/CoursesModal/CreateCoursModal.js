@@ -10,12 +10,12 @@ import InputLabel from '@mui/material/InputLabel';
 import FormControl from '@mui/material/FormControl';
 import axios from 'axios';
 
+
 const apiUrl = 'http://localhost:8000/api';
 
 function CreateCoursModal({ open, onClose, onAdd, modules, classes, professeurs, Semestres }) {
   const [newCourse, setNewCourse] = useState({
     moduleName: '',
-    objectifs: '',
     className: '',
     heureTotal: '',
     heureDeroule: 0, // Initialisé à 0
@@ -40,7 +40,6 @@ function CreateCoursModal({ open, onClose, onAdd, modules, classes, professeurs,
       .then((response) => {
         onAdd(response.data.classe);
         setNewCourse({
-          objectifs: '',
           className: '',
           heureDeroule: 0,
           heureTotal: '',
@@ -130,14 +129,14 @@ function CreateCoursModal({ open, onClose, onAdd, modules, classes, professeurs,
           </Select>
         </FormControl>
         
-        <TextField
+        {/* <TextField
           label="Objectifs"
           name="objectifs"
-          value={newCourse.objectifs}
+          // value={objectifs}
           onChange={handleInputChange}
           fullWidth
           margin="normal"
-        />
+        /> */}
         <TextField
           label="Heure totale"
           type="number"
@@ -151,7 +150,7 @@ function CreateCoursModal({ open, onClose, onAdd, modules, classes, professeurs,
           variant="contained"
           color="primary"
           onClick={handleAddCourse}
-          disabled={!newCourse.module_id || !newCourse.objectifs || !newCourse.classe_id}
+          disabled={!newCourse.module_id ||  !newCourse.classe_id}
           sx={{ mt: 2 }}
         >
           Ajouter le cours
