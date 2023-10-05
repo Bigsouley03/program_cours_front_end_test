@@ -91,7 +91,7 @@ const handleSave = () => {
       axios
         .get(`${apiUrl}/programUe`)
         .then((response) => {
-          setTableUesByClasse(response.data.programUes);
+          setTableUesByClasse(response.data);
         })
         .catch((error) => {
           console.error('Error fetching table_ue_id by classe:', error);

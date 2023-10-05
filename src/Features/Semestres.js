@@ -152,7 +152,7 @@ function Semestre() {
                           <TableCell sx={{ fontSize: '16px' }}>
                             {editingId === row.id ? (
                               <IconButton onClick={() => setEditModalOpen(true)}>
-                                <EditIcon />
+                                { row.semestreName}
                               </IconButton>
                             ) : (
                               row.semestreName

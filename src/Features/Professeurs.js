@@ -120,15 +120,23 @@ function Professeur() {
               {selectedProfesseur && (
                 <Box>
                   <Typography variant="subtitle1" gutterBottom>
-                    Nom : {selectedProfesseur.name}
+                    <strong>
+                    Nom :  
+                    </strong>
+                    { selectedProfesseur.name}
                   </Typography>
                   <Typography variant="subtitle1" gutterBottom>
-                    Email: {selectedProfesseur.email}
+                    <strong>
+                        Email: 
+                    </strong>
+                    {  selectedProfesseur.email}
                   </Typography>
                   <Typography variant="subtitle1" gutterBottom>
-                    Adresse: {selectedProfesseur.adresse}
+                    <strong>
+                      Adresse:   
+                    </strong>
+                    {  selectedProfesseur.adresse}
                   </Typography>
-                  {/* Ajouter d'autres détails ici en utilisant des composants Typography */}
                 </Box>
               )}
               <Button

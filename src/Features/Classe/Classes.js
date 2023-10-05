@@ -33,6 +33,8 @@ function Classe() {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
 const [selectedClassDetails, setSelectedClassDetails] = useState(null);
+const [selectedStudentEmail, setSelectedStudentEmail] = useState(''); // Declare it here
+
 
 
 
@@ -48,7 +50,7 @@ const [selectedClassDetails, setSelectedClassDetails] = useState(null);
     const updatedRow = rows.find(row => row.id === id);
     if (updatedRow) {
       const updatedStatus = updatedRow.status === '1' ? '0' : '1';
-      axios.put(`${apiUrl}/classe/${id}`, { ...updatedRow, status: updatedStatus })
+      axios.put(`${apiUrl}/updateClasse/${id}`, { ...updatedRow, status: updatedStatus })
         .then(() => {
           const updatedRows = rows.map(row => (row.id === id ? { ...row, status: updatedStatus } : row));
           setRows(updatedRows);
@@ -56,6 +58,21 @@ const [selectedClassDetails, setSelectedClassDetails] = useState(null);
         .catch(error => console.error('Error toggling Class status:', error));
     }
   };
+  
+  const saveEditedClass = (id) => {
+    const updatedRow = rows.find(row => row.id === id);
+    if (updatedRow) {
+      axios.put(`${apiUrl}/updateClasse/${id}`, { ...updatedRow, className: editedClassName, status: editedStatus })
+        .then(() => {
+          const updatedRows = rows.map(row => (row.id === id ? { ...row, className: editedClassName, status: editedStatus } : row));
+          setRows(updatedRows);
+          setEditingId(null);
+          closeEditModal();
+        })
+        .catch(error => console.error('Error saving edited Class:', error));
+    }
+  };
+  
 
 
   
@@ -71,26 +88,14 @@ const [selectedClassDetails, setSelectedClassDetails] = useState(null);
   };
 
   useEffect(() => {
-    axios.get(apiUrl + '/classe')
+    axios.get(`${apiUrl}/classe`) // Make sure the endpoint matches your Laravel route
       .then(response => {
-        console.log(response);
         setRows(response.data.classes);
-      })
-      .catch(error => console.error('Error fetching data:', error));
+      })     
+        .catch(error => console.error('Error fetching data:', error));
   }, []);
-  const saveEditedClass = (id) => {
-    const updatedRow = rows.find(row => row.id === id);
-    if (updatedRow) {
-      axios.put(`${apiUrl}/updateClasse/${id}`, { ...updatedRow, className: editedClassName, status: editedStatus })
-        .then(() => {
-          const updatedRows = rows.map(row => (row.id === id ? { ...row, className: editedClassName, status: editedStatus } : row));
-          setRows(updatedRows);
-          setEditingId(null);
-          closeEditModal();
-        })
-        .catch(error => console.error('Error saving edited Class:', error));
-    }
-  };
+  
+
   const deleteClass = () => {
     axios.delete(`${apiUrl}/deleteClasse/${selectedClassId}`)
       .then(() => {
@@ -100,14 +105,16 @@ const [selectedClassDetails, setSelectedClassDetails] = useState(null);
       })
       .catch(error => console.error('Error deleting Class:', error));
   };
-  const openDetailsModal = (className, etudiant_name, etudiant_email) => {
+  const openDetailsModal = (className, etudiant_id, user_id, studentEmail) => {
     setSelectedClassDetails({
       className,
-      etudiant_name,
-      etudiant_email,
+      etudiant_id,
+      user_id,
     });
+    setSelectedStudentEmail(studentEmail); // Mettre à jour l'email de l'étudiant responsable
     setDetailsModalOpen(true);
   };
+  
 
   // Rest of the code for saving, toggling, deleting classes...
 
@@ -237,7 +244,7 @@ const [selectedClassDetails, setSelectedClassDetails] = useState(null);
                             variant="outlined"
                             color="primary"
                             size="small"
-                            onClick={() => openDetailsModal(row.className, row.etudiant_name, row.etudiant_email)}
+                            onClick={() => openDetailsModal(row.className, row.etudiant_id, row.user_id, row.etudiant_email)}
                           >
                             Voir les détails
                           </Button>
@@ -264,9 +271,9 @@ const [selectedClassDetails, setSelectedClassDetails] = useState(null);
                     {selectedClassDetails && (
                       <div>
                         <Typography><strong>Nom de la Classe :</strong> {selectedClassDetails.className}</Typography>
-                        <Typography><strong>Nom de l'Étudiant Responsable :</strong> {selectedClassDetails.etudiant_name}</Typography>
-                        <Typography><strong>Email de l'Étudiant Responsable:</strong> {selectedClassDetails.etudiant_email}</Typography>
-                      </div>
+                        <Typography><strong>Nom de l'Étudiant Responsable :</strong> {selectedClassDetails.etudiant_id.name}</Typography>
+                        <Typography><strong>Email:</strong> {selectedClassDetails.selectedStudentEmail||'etudiant@email.com'}</Typography>                      
+                        </div>
                     )}
                   </Box>
                   </Modal>
