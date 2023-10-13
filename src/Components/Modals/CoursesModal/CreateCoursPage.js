@@ -26,32 +26,53 @@ function CreateCoursPage() {
   });
 
   const [classes, setClasses] = useState([]);
-  const [classeId, setClasseId] = useState(null);
-
   const [modules, setModules] = useState([]);
   const [professeurs, setProfesseurs] = useState([]);
-  const [objectifText, setObjectifText] = useState(''); // Texte de l'objectif temporaire
-  const [objectifs, setObjectifs] = useState([]); // Liste des objectifs ajoutés
+  const [objectifText, setObjectifText] = useState('');
+  const [objectifs, setObjectifs] = useState([]);
+  const [programModules, setProgramModules] = useState([]);
+
   const [semestres, setSemestres] = useState([]);
+  const [classeId, setClasseId] = useState(null);
+
   const [createdCourseId, setCreatedCourseId] = useState([]);
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [tableUes, setTableUes] = useState([]);
+  const [filteredUes, setFilteredUes] = useState([]);
   const [assignedModules, setAssignedModules] = useState([]);
   const [selectedUe, setSelectedUe] = useState('');
-  
+
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [programUes, setProgramUes] = useState([]);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [tableUes, setTableUes] = useState([]);
+
   const history = useHistory();
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
-    if (name === 'ue_id') {
-      // Si l'UE change, réinitialisez le module sélectionné également
+  
+    if (name === 'classe_id') {
+      const selectedClasseId = value;
       setNewCourse({
         ...newCourse,
-        module_id: '', // Réinitialisez le module sélectionné
+        [name]: selectedClasseId,
+        ue_id: '', // Reset ue_id when classe is changed
+      });
+  
+      const filteredUes = programUes.filter((programUe) => programUe.classe_id === selectedClasseId);
+      setFilteredUes(filteredUes);
+    } else if (name === 'ue_id') {
+      setNewCourse({
+        ...newCourse,
+        module_id: '',
         [name]: value,
       });
-      setSelectedUe(value); // Mettez à jour l'UE sélectionnée
+  
+      // Récupérez les modules de ce programme
+      const selectedProgramModule = programModules.find((programModule) => programModule.ue_id === value);
+      if (name === 'ue_id' || name === 'classe_id') {
+        // If UE or Classe is changed, call fetchModulesByUeAndClass
+        fetchModulesByUeAndClass(value, newCourse.classe_id);
+      }
     } else {
       setNewCourse({
         ...newCourse,
@@ -61,64 +82,145 @@ function CreateCoursPage() {
   };
   
   
+const fetchModulesByUeAndClass = (ueId, classId) => {
+  axios
+    .get(`${apiUrl}/showModulesByUeAndClass/${ueId}/${classId}`)
+    .then((response) => {
+      // Récupérez les modules associés à l'UE et à la classe sélectionnées
+      const modules = response.data;
+      console.log(classId);
+      // Faites quelque chose avec les modules, par exemple, mettez-les à jour dans un état
+      setModules(modules);
+    })
+    .catch((error) => {
+      console.error('Erreur lors de la récupération des modules :', error);
+    });
+};
+
+  
+  useEffect(() => {
+    axios
+      .get(`${apiUrl}/programUe`)
+      .then((response) => {
+        setProgramUes(response.data);
+      })
+      .catch((error) => {
+        console.error('Error fetching programUes:', error);
+      });
+      
+
+  }, []);
 
   useEffect(() => {
-    // Fetch UEs based on the selected class
+    const fetchAssignedModules = () => {
+      if (newCourse.classe_id && newCourse.ue_id) {
+        axios
+          .get(`${apiUrl}/programModule`, {
+            params: {
+              classe_id: newCourse.classe_id,
+              ue_id: newCourse.ue_id,
+            },
+          })
+          .then((response) => {
+            setProgramModules(response.data)
+            console.log(newCourse.ue_id)
+          })
+          .catch((error) => {
+            console.error('Erreur lors de la récupération des modules assignés :', error);
+            setAssignedModules([]); // Réinitialiser les modules assignés en cas d'erreur
+          });
+      } else {
+        setAssignedModules([]); // Réinitialiser les modules assignés si la classe ou l'UE n'est pas sélectionnée
+      }
+    };
+    fetchAssignedModules();
+  }, [newCourse.classe_id, newCourse.ue_id]);
+  
+  
+
+  useEffect(() => {
     if (newCourse.classe_id) {
       axios
         .get(`${apiUrl}/tableUe`)
         .then((response) => {
-          setTableUes(response.data.tableUes);
-  
-          // Fetch assigned modules for the selected UE
-          if (selectedUe) {
-            axios
-              .get(`${apiUrl}/showModulesByUeId/${selectedUe}`)
-              .then((moduleResponse) => {
-                setAssignedModules(moduleResponse.data);
-              })
-              .catch((error) => {
-                console.error('Error fetching assigned modules:', error);
-              });
-          }
+          const allUes = response.data.tableUes;
+          setTableUes(allUes);
+          setSelectedUe('');
         })
         .catch((error) => {
           console.error('Erreur lors de la récupération des UEs :', error);
         });
     } else {
-      // Reset the UEs when no class is selected
       setTableUes([]);
       setSelectedUe('');
-      setAssignedModules([]); // Reset assigned modules
+      setAssignedModules([]);
     }
   }, [newCourse.classe_id, selectedUe]);
-  
+
+  const nomUeMap = {};
+  if (Array.isArray(tableUes)) {
+    tableUes.forEach((tableUe) => {
+      nomUeMap[tableUe.id] = tableUe.nomUe;
+    });
+  }
+
+  useEffect(() => {
+    axios
+      .get(apiUrl + '/classe')
+      .then((response) => {
+        setClasses(response.data.classes);
+      })
+      .catch((error) => {
+        console.error('Erreur lors de la récupération des classes :', error);
+      });
+
+    // axios
+    //   .get(apiUrl + '/module')
+    //   .then((response) => {
+    //     setModules(response.data.modules);
+    //   })
+    //   .catch((error) => {
+    //     console.error('Erreur lors de la récupération des modules :', error);
+    //   });
+
+    axios
+      .get(apiUrl + '/professeur')
+      .then((response) => {
+        setProfesseurs(response.data);
+      })
+      .catch((error) => {
+        console.error('Erreur lors de la récupération des utilisateurs :', error);
+      });
+
+    axios
+      .get(apiUrl + '/semestre')
+      .then((response) => {
+        setSemestres(response.data.Semestres);
+      })
+      .catch((error) => {
+        console.error('Erreur lors de la récupération des semestres :', error);
+      });
+  }, []);
+
 
   const handleAddCourse = () => {
-    // Enregistrer le cours
     axios
       .post(`${apiUrl}/storeCoursE`, newCourse)
       .then((response) => {
-        // Handle the successful response, e.g., redirect or show a success message.
         console.log('Course added successfully:', response.data);
 
-        // Récupérer l'ID du cours créé
         const courseId = response.data.classe.id;
-         // Récupérer l'ID de la classe associée
         const classeId = response.data.classe.classe_id;
 
-        // Mettre à jour l'état avec l'ID du cours
         setCreatedCourseId(courseId);
-        // Mettre à jour l'état avec l'ID de la classe associée
-        setClasseId(classeId); // Ajoutez cette ligne
+        setClasseId(classeId);
 
-        // Ajouter les objectifs associés au cours
         objectifs.forEach((objectif) => {
           axios
             .post(`${apiUrl}/storeObjectifs`, {
               description: objectif,
-              cours_enroller_id: courseId, // Utilisez l'ID du cours créé
-              etat: false, // Par défaut, l'objectif n'est pas atteint
+              cours_enroller_id: courseId,
+              etat: false,
             })
             .then((objResponse) => {
               console.log('Objectif added successfully:', objResponse.data);
@@ -128,18 +230,16 @@ function CreateCoursPage() {
             });
         });
 
-        // Show the Snackbar
         setSnackbarMessage('Cours enroulé avec succès');
         setSnackbarOpen(true);
 
-        // Reset the form
         setNewCourse({
           heureTotal: '',
           module_id: '',
           professeur_id: '',
           classe_id: '',
           semestre_id: '',
-          contenu:'',
+          contenu: '',
           etatCours: 'En cours',
         });
         setObjectifs([]);
@@ -160,59 +260,12 @@ function CreateCoursPage() {
     setSnackbarOpen(false);
   };
 
-
   const handleSnackbarAction = () => {
     if (classeId) {
       history.push(`/details/${classeId}`);
     }
     setSnackbarOpen(false);
   };
-  
-
-  
-
-
-  useEffect(() => {
-    // Fetch classes
-    axios
-      .get(apiUrl + '/classe')
-      .then((response) => {
-        setClasses(response.data.classes);
-      })
-      .catch((error) => {
-        console.error('Erreur lors de la récupération des classes :', error);
-      });
-
-    // Fetch modules
-    axios
-      .get(apiUrl + '/module')
-      .then((response) => {
-        setModules(response.data.modules);
-      })
-      .catch((error) => {
-        console.error('Erreur lors de la récupération des modules :', error);
-      });
-
-    // Fetch professeurs
-    axios
-      .get(apiUrl + '/professeur')
-      .then((response) => {
-        setProfesseurs(response.data);
-      })
-      .catch((error) => {
-        console.error('Erreur lors de la récupération des utilisateurs :', error);
-      });
-
-    // Fetch semestres
-    axios
-      .get(apiUrl + '/semestre')
-      .then((response) => {
-        setSemestres(response.data.Semestres);
-      })
-      .catch((error) => {
-        console.error('Erreur lors de la récupération des semestres :', error);
-      });
-  }, []);
 
   return (
     <Box>
@@ -234,24 +287,22 @@ function CreateCoursPage() {
         </Select>
       </FormControl>
       <FormControl fullWidth margin="normal">
-  <InputLabel>UE</InputLabel>
-  <Select
-    name="ue_id"
-    value={newCourse.ue_id} // Utilisez newCourse.ue_id ici
-    onChange={handleInputChange}
-  >
-    {tableUes.map((ue) => (
-      <MenuItem key={ue.id} value={ue.id}>
-        {ue.nomUe}
-      </MenuItem>
-    ))}
-  </Select>
-</FormControl>
-
-
-<FormControl fullWidth margin="normal">
-  <InputLabel>Module</InputLabel>
-  <Select
+        <InputLabel>UE</InputLabel>
+        <Select
+          name="ue_id"
+          value={newCourse.ue_id}
+          onChange={handleInputChange}
+        >
+          {filteredUes.map((ue) => (
+            <MenuItem key={ue.id} value={ue.id}>
+              {nomUeMap[ue.table_ue_id]}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+      <FormControl fullWidth margin="normal">
+        <InputLabel>Module</InputLabel>
+        <Select
     name="module_id"
     value={newCourse.module_id}
     onChange={handleInputChange}
@@ -262,7 +313,8 @@ function CreateCoursPage() {
       </MenuItem>
     ))}
   </Select>
-  <TextField
+      </FormControl>
+      <TextField
         label="Objectif du Cours"
         type="text"
         name="obj"
@@ -271,10 +323,6 @@ function CreateCoursPage() {
         fullWidth
         margin="normal"
       />
-</FormControl>
-
-
-
       <FormControl fullWidth margin="normal">
         <InputLabel>Semestre</InputLabel>
         <Select
@@ -313,21 +361,21 @@ function CreateCoursPage() {
         margin="normal"
       />
       <FormGroup>
-      <Typography variant="h6" gutterBottom style={{ marginTop: '20px' }}>
-        Contenus du cours
-      </Typography>
-      <TextareaAutosize
-        fullWidth
-        name="objectifText"
-        aria-label="textarea"
-        minRows={10} // Nombre minimum de lignes
-        maxRows={13} // Nombre maximum de lignes
-        placeholder="Entrer Contenu "
-        value={objectifText}
-        onChange={(e) => setObjectifText(e.target.value)}
-        margin="normal"
-      />
-            </FormGroup>
+        <Typography variant="h6" gutterBottom style={{ marginTop: '20px' }}>
+          Contenus du cours
+        </Typography>
+        <TextareaAutosize
+          fullWidth
+          name="objectifText"
+          aria-label="textarea"
+          minRows={10}
+          maxRows={13}
+          placeholder="Entrer Contenu"
+          value={objectifText}
+          onChange={(e) => setObjectifText(e.target.value)}
+          margin="normal"
+        />
+      </FormGroup>
       <Button
         variant="contained"
         color="primary"
@@ -352,7 +400,6 @@ function CreateCoursPage() {
           !newCourse.classe_id ||
           !newCourse.semestre_id ||
           !newCourse.heureTotal ||
-
           objectifs.length === 0
         }
         style={{ marginTop: '20px' }}
@@ -361,31 +408,29 @@ function CreateCoursPage() {
       </Button>
       <Snackbar
         open={snackbarOpen}
-        autoHideDuration={10000} // Durée du Snackbar en ms
+        autoHideDuration={10000}
         onClose={handleSnackbarClose}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
         message={snackbarMessage}
         sx={{
-            '& .MuiSnackbarContent-root': {
-            backgroundColor: '#1976d2', // Couleur primary
+          '& .MuiSnackbarContent-root': {
+            backgroundColor: '#1976d2',
             color: 'white',
-            minWidth: '400px', // Largeur personnalisée
-            },
+            minWidth: '400px',
+          },
         }}
         action={
-            <Button
+          <Button
             size="small"
-            onClick={() => handleSnackbarAction()}
+            onClick={handleSnackbarAction}
             sx={{
-                color: 'white', // Définissez la couleur du texte en blanc
-              }}
-            >
+              color: 'white',
+            }}
+          >
             Aller vers la classe
-            </Button>
+          </Button>
         }
-        />
-
-
+      />
     </Box>
   );
 }

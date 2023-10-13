@@ -28,6 +28,18 @@ export default function Modules() {
     fontSize: '24px',
   };
 
+  const fetchModuleData = () => {
+    // Fetch the list of modules from the API
+    axios
+      .get(`${apiUrl}/module`)
+      .then((response) => {
+        setModules(response.data.modules);
+      })
+      .catch((error) => {
+        console.error('Error fetching modules:', error);
+      });
+  };
+
   // Function to open the modal for creating a new module
   const handleNewModule = () => {
     setOpenModalM(true);
@@ -41,18 +53,13 @@ export default function Modules() {
     // Send the data to your API endpoint for module creation
     axios
       .post(`${apiUrl}/storeModule`, moduleData)
-      .then((response) => {
+      .then(() => {
         // Close the modal and reset the form
         setOpenModalM(false);
         setNewModule({ moduleName: '' });
 
-        // Update the modules state with the new module
-        setModules([...modules, response.data]);
-
-        // Alternatively, you can directly access the moduleName
-        // and add it to the list without another API call like this:
-        // const { moduleName } = response.data;
-        // setModules([...modules, { moduleName }]);
+        // Call fetchModuleData to update the modules list
+        fetchModuleData();
       })
       .catch((error) => {
         console.error(error);
@@ -60,16 +67,9 @@ export default function Modules() {
   };
 
   useEffect(() => {
-    // Fetch the list of modules from the API
-    axios
-      .get(`${apiUrl}/module`)
-      .then((response) => {
-        setModules(response.data.modules);
-      })
-      .catch((error) => {
-        console.error('Error fetching modules:', error);
-      });
-  }, []);
+    // Initial fetch of module data
+    fetchModuleData();
+  }, []); // Empty dependency array to fetch data only once
 
   return (
     <Grid item xs={12}>

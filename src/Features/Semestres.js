@@ -22,6 +22,8 @@ import DeleteSemestreModal from '../Components/Modals/SemestreModal/DeleteSemest
 import EditSemestreModal from '../Components/Modals/SemestreModal/EditSemestreModal';
 
 function Semestre() {
+  const apiUrl = 'http://localhost:8000/api';
+
   const [rows, setRows] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [editedSemestreName, setEditedSemestreName] = useState('');
@@ -32,27 +34,25 @@ function Semestre() {
   const [selectedSemestreId, setSelectedSemestreId] = useState(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
 
+  useEffect(() => {
+    axios.get(apiUrl + '/semestre')
+      .then(response => {
+        setRows(response.data.Semestres);
+      })
+      .catch(error => console.error('Error fetching data:', error));
+  }, []);
 
-  const openEditModal = (id,semestreName, status) => {
+  const openEditModal = (id, semestreName, status) => {
     setEditingId(id);
     setEditedSemestreName(semestreName);
     setEditedStatus(status);
     setEditModalOpen(true);
   };
 
-  const closeEditModal = (id) => {
+  const closeEditModal = () => {
     setEditingId(null);
     setEditModalOpen(false);
   };
-
-  useEffect(() => {
-    axios.get(apiUrl + '/semestre')
-      .then(response => {
-        console.log(response);
-        setRows(response.data.Semestres); // Mettez à jour les données des Semestres ici
-      })
-      .catch(error => console.error('Error fetching data:', error));
-  }, []);
 
   const saveEditedSemestre = (id) => {
     const updatedRow = rows.find(row => row.id === id);
@@ -91,18 +91,17 @@ function Semestre() {
       .then(() => {
         const updatedRows = rows.filter(row => row.id !== selectedSemestreId);
         setRows(updatedRows);
-        setDeleteModalOpen(false); // Fermer le modal de suppression
+        setDeleteModalOpen(false);
       })
       .catch(error => console.error('Error deleting Semestre:', error));
   };
-  
-  const apiUrl = 'http://localhost:8000/api';
+
   const defaultTheme = createTheme();
 
   return (
     <ThemeProvider theme={defaultTheme}>
       <Box sx={{ display: 'flex' }}>
-        <CssBaseline />        
+        <CssBaseline />
         <Box
           component="main"
           sx={{
@@ -119,23 +118,23 @@ function Semestre() {
           <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
             <Grid container spacing={3}>
               <Grid item xs={12} md={8} lg={16}>
-              <Grid container alignItems="center" justifyContent="space-between" sx={{ mb: 4 }}>
+                <Grid container alignItems="center" justifyContent="space-between" sx={{ mb: 4 }}>
                   <Typography variant="h4">Semestres Recents</Typography>
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      onClick={() => setAddModalOpen(true)}
-                      disabled={newSemestreName.trim()}
-                    >
-                      Ajouter Un Semestre
-                    </Button>
-                  </Grid>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() => setAddModalOpen(true)}
+                    disabled={newSemestreName.trim()}
+                  >
+                    Ajouter Un Semestre
+                  </Button>
+                </Grid>
                 <Paper
                   sx={{
                     p: 4,
                     display: 'flex',
                     flexDirection: 'column',
-                    width: '100%', 
+                    width: '100%',
                   }}
                 >
                   <Table size="small">
@@ -152,7 +151,7 @@ function Semestre() {
                           <TableCell sx={{ fontSize: '16px' }}>
                             {editingId === row.id ? (
                               <IconButton onClick={() => setEditModalOpen(true)}>
-                                { row.semestreName}
+                                {row.semestreName}
                               </IconButton>
                             ) : (
                               row.semestreName
@@ -176,7 +175,8 @@ function Semestre() {
                                     : "Off"
                                   : row.status === "1"
                                   ? "On"
-                                  : "Off"}
+                                  : "Off"
+                                }
                               </Button>
                             ) : (
                               <Button
@@ -195,7 +195,8 @@ function Semestre() {
                                     : "Off"
                                   : row.status === "1"
                                   ? "On"
-                                  : "Off"}
+                                  : "Off"
+                                }
                               </Button>
                             )}
                           </TableCell>
@@ -222,17 +223,15 @@ function Semestre() {
                     </TableBody>
                   </Table>
 
-                  {/* Add Semestre Modal */}
                   <EditSemestreModal
                     open={editModalOpen}
-                    onClose={() => setEditModalOpen(false)}
+                    onClose={closeEditModal}
                     semestreName={editedSemestreName}
                     status={editedStatus}
                     onSave={() => saveEditedSemestre(editingId)}
                     onStatusToggle={() => setEditedStatus(editedStatus === '1' ? '0' : '1')}
                     onSemestreNameChange={(e) => setEditedSemestreName(e.target.value)}
                   />
-                  {/* Delete Semestre Modal */}
                   <DeleteSemestreModal
                     open={deleteModalOpen}
                     onDelete={deleteSemestre}

@@ -40,12 +40,13 @@ const [selectedStudentEmail, setSelectedStudentEmail] = useState(''); // Declare
 
 
 
-  const openEditModal = (id, className, status) => {
-    setEditingId(id);
-    setEditedClassName(className);
-    setEditedStatus(status);
-    setEditModalOpen(true);
-  };
+const openEditModal = (id, className, status) => {
+  setEditingId(id);
+  setEditedClassName(className); // Pré-remplir le formulaire avec le nom de la classe
+  setEditedStatus(status); // Pré-remplir le formulaire avec le statut
+  setEditModalOpen(true);
+};
+
   const toggleStatus = (id) => {
     const updatedRow = rows.find(row => row.id === id);
     if (updatedRow) {

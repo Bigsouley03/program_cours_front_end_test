@@ -9,7 +9,7 @@ import {
   FormControlLabel,
   FormGroup,
   Checkbox,
-  LinearProgress, // Import LinearProgress
+  LinearProgress,
 } from '@mui/material';
 import axios from 'axios';
 
@@ -19,10 +19,8 @@ function SuivreCoursPage(classeId) {
   const [nombreHeure, setNombreHeure] = useState('');
   const [date, setDate] = useState('');
   const [objectifs, setObjectifs] = useState([]);
-  const [selectedObjectiveId, setSelectedObjectiveId] = useState(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
-  
   const history = useHistory();
 
   useEffect(() => {
@@ -36,14 +34,31 @@ function SuivreCoursPage(classeId) {
           etat: false,
         }));
         setObjectifs(objectivesWithEtatFalse);
+        // Chargez les objectifs depuis le stockage local s'ils existent
+        const savedObjectifs = JSON.parse(localStorage.getItem(`objectifs_${courseId}`));
+        if (savedObjectifs) {
+          const updatedObjectifs = objectivesWithEtatFalse.map((objective) => {
+            const savedObjective = savedObjectifs.find((o) => o.id === objective.id);
+            return savedObjective || objective;
+          });
+          setObjectifs(updatedObjectifs);
+        }
       })
       .catch((error) => {
         console.error('Error fetching objectives:', error);
       });
   }, [courseId]);
 
+  const saveObjectifsLocally = (objectifsToSave) => {
+    // Sauvegardez les objectifs dans le stockage local
+    localStorage.setItem(`objectifs_${courseId}`, JSON.stringify(objectifsToSave));
+  };
+
   const handleSaveSuivi = () => {
-    // Save other data (nombreHeure and date) as needed
+    // Sauvegardez les objectifs localement
+    saveObjectifsLocally(objectifs);
+
+    // Enregistrez d'autres données (nombreHeure et date) comme vous le faites actuellement
     const formData = {
       nombreHeure: parseInt(nombreHeure),
       date,
@@ -71,17 +86,20 @@ function SuivreCoursPage(classeId) {
     }
     setSnackbarOpen(false);
   };
+
   const handleSnackbarAction = () => {
-    // Redirigez vers la page de détails de la classe en utilisant l'ID de la classe associée (si l'ID existe)
-      history.push(`/`);
+    history.push(`/`);
     setSnackbarOpen(false);
   };
-  
-  
-  
-  
-  
-  
+
+  const handleObjectiveToggle = (objectiveId) => {
+    // Mettez à jour l'état localement
+    const updatedObjectifs = objectifs.map((obj) =>
+      obj.id === objectiveId ? { ...obj, etat: !obj.etat } : obj
+    );
+    setObjectifs(updatedObjectifs);
+    saveObjectifsLocally(updatedObjectifs);
+  };
 
   const countCheckedObjectifs = () => {
     return objectifs.filter((objective) => objective.etat).length;
@@ -113,38 +131,27 @@ function SuivreCoursPage(classeId) {
         <FormGroup>
           {objectifs.map((objective) => (
             <FormControlLabel
-              key={objective.id}
-              control={
-                <Checkbox
-                  checked={objective.etat}
-                  onChange={(e) => {
-                    setObjectifs((prevObjectifs) =>
-                      prevObjectifs.map((obj) =>
-                        obj.id === objective.id
-                          ? { ...obj, etat: e.target.checked }
-                          : obj
-                      )
-                    );
-                  }}
-                />
-              }
-              label={objective.description}
-              onClick={() => setSelectedObjectiveId(objective.id)}
-            />
+  key={objective.id}
+  control={
+    <Checkbox
+      checked={objective.etat}
+      onChange={() => handleObjectiveToggle(objective.id)}
+    />
+  }
+  label={objective.description}
+/>
           ))}
         </FormGroup>
         <FormGroup>
-        <LinearProgress
-        variant="determinate"
-        value={(countCheckedObjectifs() / objectifs.length) * 100} // Calculate the progress
-      />
-      </FormGroup>
-      
-      <Button onClick={handleSaveSuivi} color="primary">
-        Enregistrer
-      </Button>
+          <LinearProgress
+            variant="determinate"
+            value={(countCheckedObjectifs() / objectifs.length) * 100}
+          />
+        </FormGroup>
+        <Button onClick={handleSaveSuivi} color="primary">
+          Enregistrer
+        </Button>
       </FormControl>
-
 
       <Snackbar
         open={snackbarOpen}
@@ -161,12 +168,12 @@ function SuivreCoursPage(classeId) {
         action={
           <Button
             size="small"
-            onClick={handleSnackbarAction} // Utilisez la fonction handleSnackbarAction
+            onClick={handleSnackbarAction}
             sx={{
               color: 'white',
             }}
           >
-            Aller vers le Tableau de bord 
+            Aller vers le Tableau de bord
           </Button>
         }
       />

@@ -52,8 +52,7 @@ export default function Ue() {
       });
   }, []);
 
-  useEffect(() => {
-    // Fetch the list of programUes
+  const fetchProgramUes = () => {
     axios
       .get(`${apiUrl}/programUe`)
       .then((response) => {
@@ -62,9 +61,12 @@ export default function Ue() {
       .catch((error) => {
         console.error('Error fetching programUes:', error);
       });
-  }, []);
+  };
+  
 
   useEffect(() => {
+    fetchProgramUes();
+
     // Fetch the list of tables UE
     axios
       .get(`${apiUrl}/tableUe`)
@@ -87,6 +89,7 @@ export default function Ue() {
       .then((response) => {
         setNewUe({ table_ue_id: '', classe_id: '' });
         setOpenModal(false);
+        fetchProgramUes();
       })
       .catch((error) => {
         console.error('Error adding UE:', error);

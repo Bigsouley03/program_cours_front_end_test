@@ -23,37 +23,28 @@ import axios from 'axios';
 function ProgramModule() {
   const [classes, setClasses] = useState([]);
   const [tableUes, setTableUes] = useState([]);
+  const [modules, setModules] = useState([]);
   const [programModules, setProgramModules] = useState([]);
   const [programUes, setProgramUes] = useState([]);
-  const [selectedModules, setSelectedModules] = useState([]);
+  const [isModuleSelectionVisible, setIsModuleSelectionVisible] = useState(false);
   const [selectedClass, setSelectedClass] = useState('filtre par Classe');
   const [selectedNomUe, setSelectedNomUe] = useState('filtre par UE');
   const [openModalP, setOpenModalP] = useState(false);
   
-  const [tableUesByClasse, setTableUesByClasse] = useState([]);
+
 
   const [newProgram, setNewProgram] = useState({
-  module_id: [],
-  table_ue_id: '',
-  classe_id: '',
-});
-const [selectedTableUeId, setSelectedTableUeId] = useState(null);
+    module_id: [], // Make sure it's initialized as an empty array
+    table_ue_id: '',
+    classe_id: '',
+  });
 
 
-const handleModuleSelection = (moduleId) => {
-  if (selectedModules.includes(moduleId)) {
-    // Si le module est déjà sélectionné, le retirer de la liste
-    setSelectedModules(selectedModules.filter((id) => id !== moduleId));
-  } else {
-    // Sinon, l'ajouter à la liste
-    setSelectedModules([...selectedModules, moduleId]);
-  }
-};
+
+
 
   const apiUrl = 'http://localhost:8000/api';
 
-
-  const [modules, setModules] = useState([]);
   const [typographyStyle] = useState({
     fontSize: '24px',
   });
@@ -66,49 +57,65 @@ const handleModuleSelection = (moduleId) => {
     setOpenModalP(true);
   };
 
-
   const handleCloseModal = () => {
     setOpenModalP(false);
   };
-const handleSave = () => {
-  // Validate the form data here if needed
 
-  // Create a new program module
-  axios
-    .post(`${apiUrl}/storeProgramModule`, newProgram)
-    .then((response) => {
-        setProgramModules(response.data)// Handle success, e.g., display a success message, refresh the program modules list, etc.
-      handleCloseModal();
-    })
-    .catch((error) => {
-      // Handle errors, e.g., display an error message
-      console.error('Error creating program module:', error);
-    });
-};
-
-  useEffect(() => {
-    if (newProgram.classe_id) {
-      axios
-        .get(`${apiUrl}/programUe`)
-        .then((response) => {
-          setTableUesByClasse(response.data);
-        })
-        .catch((error) => {
-          console.error('Error fetching table_ue_id by classe:', error);
+  const fetchProgramModules = () => {
+    axios
+      .get(`${apiUrl}/programModule`)
+      .then((response) => {
+        setProgramModules(response.data);
+      })
+      .catch((error) => {
+        console.error('Error fetching program modules:', error);
+      });
+  };
+  
+  const handleSave = () => {
+    // Validate the form data here if needed
+  
+    // Create a new program module
+    const requestData = {
+      table_ue_id: newProgram.table_ue_id,
+      classe_id: newProgram.classe_id,
+      module_id: newProgram.module_id, // Include module_id
+    };
+  
+    axios
+      .post(`${apiUrl}/storeProgramModule`, requestData)
+      .then(() => {
+        fetchProgramModules(); // Met à jour les modules après l'ajout
+        handleCloseModal();
+        setNewProgram({
+          module_id: [], // Make sure it's initialized as an empty array
+          table_ue_id: '',
+          classe_id: '',
         });
-    }
-  }, [newProgram.classe_id]);
+
+      })
+      .catch((error) => {
+        console.error('Error creating program module:', error);
+      });
+  };
+  
+  
 
 
-
-
-
+  const nomUeMap = {};
+  if (Array.isArray(tableUes)) {
+    tableUes.forEach((tableUe) => {
+      nomUeMap[tableUe.id] = tableUe.nomUe;
+    });
+  }
+  
 
   useEffect(() => {
+    fetchProgramModules();
     axios
       .get(`${apiUrl}/classe`)
       .then((response) => {
-        setClasses(response.data.classes)
+        setClasses(response.data.classes);
       })
       .catch((error) => {
         console.error('Error fetching classes:', error);
@@ -126,16 +133,8 @@ const handleSave = () => {
       });
   }, []);
 
-  useEffect(() => {
-    axios
-      .get(`${apiUrl}/programModule`)
-      .then((response) => {
-        setProgramModules(response.data);
-      })
-      .catch((error) => {
-        console.error('Error fetching program UEs:', error);
-      });
-  }, []);
+
+  
 
   useEffect(() => {
     axios
@@ -148,44 +147,54 @@ const handleSave = () => {
       });
   }, []);
   useEffect(() => {
+    // Activer l'affichage de la section si une classe et une UE sont sélectionnées
+    if (newProgram.classe_id && newProgram.table_ue_id) {
+      setIsModuleSelectionVisible(true);
+    } else {
+      setIsModuleSelectionVisible(false);
+    }
+  }, [newProgram.classe_id, newProgram.table_ue_id]);
+  
+
+  useEffect(() => {
     axios
       .get(`${apiUrl}/programUe`)
       .then((response) => {
-        setProgramUes(response.data)
+        setProgramUes(response.data);
       })
       .catch((error) => {
         console.error('Error fetching programUes:', error);
       });
   }, []);
+
+  function getClassName(programModule) {
+    if (programModule && programModule.table_ue_id) {
+      const assignedProgramUe = programUes.find((programUe) => programUe.id === programModule.table_ue_id);
   
+      if (assignedProgramUe) {
+        const assignedClasse = classes.find((classe) => classe.id === assignedProgramUe.classe_id);
   
-
-  const nomUeMap = {};
-  tableUes.forEach((tableUe) => {
-    nomUeMap[tableUe.id] = tableUe.nomUe;
-  });
-
-  function getClassName(tableUeId) {
-    const tableUe = programUes.find((tableUe) => tableUe.id === tableUeId);
-
-    if (tableUe) {
-      const classe = classes.find((classe) => classe.id === tableUe.classe_id);
-
-      if (classe) {
-        return classe.className;
+        if (assignedClasse) {
+          return assignedClasse.className;
+        }
       }
     }
-
+  
     return '';
   }
+  
 
   const filteredProgramModules = programModules.filter((programModule) => {
-    const isClassMatch = selectedClass === 'filtre par Classe' || getClassName(programModule.table_ue_id) === selectedClass;
+    const isClassMatch = selectedClass === 'filtre par Classe' || getClassName(programModule) === selectedClass;
     const isNomUeMatch = selectedNomUe === 'filtre par UE' || nomUeMap[programModule.table_ue_id] === selectedNomUe;
-
+  
     return isClassMatch && isNomUeMatch;
   });
-
+  
+  const filteredUes = programUes.filter((programUe) => {
+    return programUe.classe_id === newProgram.classe_id;
+  });
+  
   return (
     <Grid item xs={12}>
       <Paper elevation={3} style={paperStyle}>
@@ -209,7 +218,7 @@ const handleSave = () => {
             </MenuItem>
           ))}
         </Select>
-
+  
         <Select
           value={selectedNomUe}
           onChange={(event) => setSelectedNomUe(event.target.value)}
@@ -232,31 +241,40 @@ const handleSave = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {filteredProgramModules.map((programModule, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{nomUeMap[programModule.table_ue_id]}</TableCell>
-                    <TableCell>{getClassName(programModule.table_ue_id)}</TableCell>
-                    <TableCell>
-                      {programModule.modules.map((module) => (
-                        <span key={module.id}>{module.moduleName}, </span>
-                      ))}
-                    </TableCell>
+                {filteredProgramModules && filteredProgramModules.length > 0 ? (
+                  filteredProgramModules.map((programModule, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{nomUeMap[programModule.table_ue_id]}</TableCell>
+                      <TableCell>{getClassName(programModule)}</TableCell>
+                      <TableCell>
+                        {programModule.modules.map((module, moduleIndex) => (
+                          <span key={module.id}>
+                            {module.moduleName}
+                            {moduleIndex < programModule.modules.length - 1 ? ', ' : ''}
+                          </span>
+                        ))}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                      Aucun Module Programmé
                   </TableRow>
-                ))}
+                )}
               </TableBody>
             </Table>
           </TableContainer>
         </Box>
       </Paper>
       <Dialog open={openModalP} onClose={handleCloseModal} fullWidth maxWidth="md">
-      <DialogContent>
-    <Paper elevation={3} style={{ padding: '20px' }}>
-      <Typography variant="h5" style={typographyStyle}>
-        Programmer un Module
-      </Typography>
-
-      <InputLabel>Selectionnez La Classe</InputLabel>
-      <Select
+        <DialogContent>
+          <Paper elevation={3} style={{ padding: '20px' }}>
+            <Typography variant="h5" style={typographyStyle}>
+              Programmer un Module
+            </Typography>
+  
+            <InputLabel>Selectionnez La Classe</InputLabel>
+            <Select
               fullWidth
               label="Classe"
               name="classe_id"
@@ -270,58 +288,66 @@ const handleSave = () => {
                 </MenuItem>
               ))}
             </Select>
-
+  
             <InputLabel>Selectionnez L'UE</InputLabel>
             <Select
               fullWidth
               label="UE"
               name="table_ue_id"
-              value={newProgram.table_ue_id} 
-              onChange={(event) => setNewProgram({ ...newProgram, table_ue_id: event.target.value })} 
+              value={newProgram.table_ue_id}
+              onChange={(event) => setNewProgram({ ...newProgram, table_ue_id: event.target.value })}
             >
               <MenuItem value="">Sélectionner une UE</MenuItem>
-              {tableUes.map((tableUe) => (
-                <MenuItem key={tableUe.id} value={tableUe.id}>
-                  {tableUe.nomUe}
-                </MenuItem>
-              ))}
+              {filteredUes && filteredUes.length > 0 ? (
+                filteredUes.map((ue) => (
+                  <MenuItem key={ue.id} value={ue.id}>
+                    {nomUeMap[ue.table_ue_id]}
+                  </MenuItem>
+                ))
+              ) : (
+                <MenuItem value="no-ues">Aucune UE disponible</MenuItem>
+              )}
             </Select>
-
-            <Typography variant="h6">Sélectionner les modules :</Typography>
-            {modules.map((module) => (
-              <div key={module.id}>
-                <Checkbox
-                  checked={newProgram.module_id.includes(module.id)}
-                  onChange={(event) => {
-                    const moduleId = module.id;
-                    const isChecked = event.target.checked;
-                    setNewProgram((prevState) => {
-                      if (isChecked) {
-                        return {
-                          ...prevState,
-                          module_id: [...prevState.module_id, moduleId],
-                        };
-                      } else {
-                        return {
-                          ...prevState,
-                          module_id: prevState.module_id.filter((id) => id !== moduleId),
-                        };
-                      }
-                    });
-                  }}
-                />
-                {module.moduleName}        
+  
+            {isModuleSelectionVisible && (
+                <div>
+                  <Typography variant="h6">Sélectionner les modules :</Typography>
+                  {modules.map((module) => (
+                    <div key={module.id}>
+                      <Checkbox
+                        checked={newProgram.module_id.includes(module.id)}
+                        onChange={(event) => {
+                          const moduleId = module.id;
+                          const isChecked = event.target.checked;
+                          setNewProgram((prevState) => {
+                            if (isChecked) {
+                              return {
+                                ...prevState,
+                                module_id: [...prevState.module_id, moduleId],
+                              };
+                            } else {
+                              return {
+                                ...prevState,
+                                module_id: prevState.module_id.filter((id) => id !== moduleId),
+                              };
+                            }
+                          });
+                        }}
+                      />
+                      {module.moduleName}
+                    </div>
+                  ))}
                 </div>
-      ))}
-
-      <Button variant="contained" color="primary" onClick={handleSave}>
-        Enregistrer
-      </Button>
-    </Paper>
-  </DialogContent>
+              )}
+            <Button variant="contained" color="primary" onClick={handleSave}>
+              Enregistrer
+            </Button>
+          </Paper>
+        </DialogContent>
       </Dialog>
     </Grid>
   );
+  
 }
 
 export default ProgramModule;
